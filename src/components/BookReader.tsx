@@ -1294,7 +1294,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                 }`}
                 onClick={() => setSidebarTab('bookmarks')}
               >
-                {t('bookmarks').toUpperCase()} ({(book.bookmarks || []).length})
+                {`${t('bookmarks').toUpperCase()} (${(book.bookmarks || []).length})`}
               </button>
               <button
                 id="sidebar-tab-search"
