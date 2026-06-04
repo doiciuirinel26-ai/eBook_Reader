@@ -50,6 +50,18 @@ function parseContent(content: string): string[] {
   return result;
 }
 
+// Maps StyleSettings fontFamily to actual CSS font-family string
+function resolveFontFamily(fontFamily: string): string {
+  switch (fontFamily) {
+    case 'serif-playfair': return '"Playfair Display", serif';
+    case 'sans-inter': return '"Inter", sans-serif';
+    case 'sans-grotesk': return '"Space Grotesk", sans-serif';
+    case 'mono-jetbrains': return '"JetBrains Mono", monospace';
+    case 'serif-merriweather':
+    default: return '"Gentium Book Plus", "Georgia", "Merriweather", serif';
+  }
+}
+
 // ─── DOM-based pagination: inserts paragraphs until overflow detected ────────
 
 function domPaginate(
@@ -58,22 +70,25 @@ function domPaginate(
   containerWidth: number,
   containerHeight: number
 ): string[] {
+  // Subtract a small safety buffer to prevent sub-pixel overflow at page edges
+  const effectiveHeight = containerHeight - 4;
+
   const probe = document.createElement('div');
+  // Apply page-text-content class so CSS cascade gives correct p margins/indent/justify
+  probe.className = 'page-text-content';
   probe.style.cssText = [
     'position:fixed',
     'top:-99999px',
     'left:-99999px',
     `width:${containerWidth}px`,
-    `height:${containerHeight}px`,
+    `height:${effectiveHeight}px`,
     'overflow:hidden',
     `font-size:${settings.fontSize}px`,
     `line-height:${settings.lineHeight}`,
+    `font-family:${resolveFontFamily(settings.fontFamily)}`,
     'visibility:hidden',
     'pointer-events:none',
     'box-sizing:border-box',
-    'word-break:break-word',
-    'overflow-wrap:break-word',
-    'hyphens:auto',
   ].join(';');
   document.body.appendChild(probe);
 
@@ -84,7 +99,7 @@ function domPaginate(
     current.push(para);
     probe.innerHTML = current.join('');
 
-    if (probe.scrollHeight > containerHeight) {
+    if (probe.scrollHeight > effectiveHeight) {
       if (current.length === 1) {
         // Single paragraph already overflows — still add it as its own page
         pages.push(current.join(''));
@@ -97,9 +112,9 @@ function domPaginate(
 
         // Re-check: does this lone paragraph also overflow?
         probe.innerHTML = para;
-        if (probe.scrollHeight > containerHeight) {
+        if (probe.scrollHeight > effectiveHeight) {
           // Split into sentences and paginate those
-          const sentencePages = splitLongParagraph(para, probe, containerWidth, containerHeight);
+          const sentencePages = splitLongParagraph(para, probe, containerWidth, effectiveHeight);
           const last = sentencePages.pop();
           sentencePages.forEach(sp => pages.push(sp));
           current = last ? [last] : [];
