@@ -517,43 +517,37 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
       <div className="absolute inset-0 bg-wood-texture opacity-30 select-none pointer-events-none" />
 
       {/* Top Controls header layout */}
-      <header 
+      <header
         id="reader-header"
-        className="relative z-10 h-16 bg-[#FBF9F6] border-b border-[#E3DDD3] flex items-center justify-between px-6 shadow-sm"
+        className="relative z-10 h-14 md:h-16 bg-[#FBF9F6] border-b border-[#E3DDD3] flex items-center justify-between px-3 md:px-6 shadow-sm"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             id="reader-back-library-btn"
             onClick={onClose}
-            className="flex items-center gap-1 text-sm text-[#8A8178] hover:text-[#2D2A26] px-3 py-1.5 hover:bg-[#FAF8F5] rounded-xl transition duration-200 border border-transparent hover:border-[#E3DDD3]"
+            className="flex items-center gap-1 text-sm text-[#8A8178] hover:text-[#2D2A26] px-2 py-1.5 hover:bg-[#FAF8F5] rounded-xl transition duration-200 border border-transparent hover:border-[#E3DDD3]"
           >
             <ChevronLeft className="w-5 h-5 text-[#5A5A40]" />
-            <span className="font-sans">Bibliotecă</span>
+            <span className="font-sans hidden sm:inline">Bibliotecă</span>
           </button>
-          
-          <div className="hidden sm:flex items-center gap-2 border-l border-[#E3DDD3] pl-4">
-            <h2 className="text-sm font-serif font-bold text-[#2D2A26] max-w-[200px] line-clamp-1">
+
+          <div className="hidden sm:flex items-center gap-2 border-l border-[#E3DDD3] pl-3">
+            <h2 className="text-sm font-serif font-bold text-[#2D2A26] max-w-[160px] line-clamp-1">
               {book.title}
             </h2>
-            <span className="text-[10px] bg-[#5A5A40]/10 text-[#5A5A40] px-2 py-0.5 rounded font-mono">
-              eBook
-            </span>
           </div>
         </div>
 
-        {/* Dynamic center indicator */}
-        <div className="hidden md:flex flex-col items-center text-center font-mono text-[11px] text-[#8A8178]">
-          <div className="flex items-center gap-2 text-[#5A5A40] font-semibold">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span className="font-semibold">{currentChapterTitle}</span>
-          </div>
+        {/* Center — chapter + page on all sizes */}
+        <div className="flex flex-col items-center text-center font-mono">
+          <span className="text-[11px] text-[#5A5A40] font-semibold line-clamp-1 max-w-[160px] sm:max-w-xs">{currentChapterTitle}</span>
           <span className="text-[9px] text-[#8A8178]/80 mt-0.5">
-            Pagina {currentPageIndex + 1} din {paginatedPages.length} (Capitolul {currentChapterIndex + 1})
+            {currentPageIndex + 1} / {paginatedPages.length}
           </span>
         </div>
 
         {/* Interaction control triggers */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2">
           <button
             id="toggle-sound-btn"
             onClick={() => setSoundEnabled(!soundEnabled)}
@@ -907,9 +901,9 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             </div>
           ) : (
             /* ==================== SINGLE PORTRAIT POCKET-BOOK MOBILE VIEW ==================== */
-            <div className="w-full h-full relative overflow-hidden rounded-xl overflow-hidden cursor-pointer" onClick={handleNextPage}>
-              <div 
-                className="absolute inset-0 p-6 sm:p-10 flex flex-col justify-between"
+            <div className="w-full h-full relative overflow-hidden rounded-xl cursor-pointer" onClick={handleNextPage}>
+              <div
+                className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-between"
                 style={{ backgroundColor: colors.bg, color: colors.text }}
               >
                 {/* Mobile visual ribbon */}
@@ -944,7 +938,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                 {/* Single Page content body */}
                 <div 
                   className={`flex-grow mt-6 min-h-0 overflow-hidden select-none page-text-content ${getFontFamilyClass()}`}
-                  style={{ fontSize: `${settings.fontSize - 1}px`, lineHeight: settings.lineHeight }}
+                  style={{ fontSize: `${Math.max(15, settings.fontSize - 1)}px`, lineHeight: settings.lineHeight }}
                   dangerouslySetInnerHTML={{ __html: highlightHTML(paginatedPages[currentPageIndex] || '', searchQuery) || '<div class="h-full flex items-center justify-center italic text-neutral-400">Sfârșitul capitolului.</div>' }}
                 />
 
@@ -977,31 +971,31 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
       </main>
 
       {/* Chapter navigation footer progress slider */}
-      <footer 
+      <footer
         id="reader-footer"
-        className="relative z-10 h-14 bg-[#FBF9F6] border-t border-[#E3DDD3] flex items-center justify-between px-6 shadow-sm"
+        className="relative z-10 h-14 bg-[#FBF9F6] border-t border-[#E3DDD3] flex items-center justify-between px-3 md:px-6 shadow-sm"
       >
         <button
           id="nav-btn-prev"
           onClick={handlePrevPage}
           disabled={currentPageIndex === 0 && currentChapterIndex === 0}
-          className="flex items-center gap-1.5 text-xs text-[#8A8178] hover:text-[#2D2A26] disabled:text-[#8A8178]/30 disabled:bg-transparent px-3 py-1.5 hover:bg-[#FAF8F5] rounded-lg transition duration-200 border border-transparent hover:border-[#E3DDD3]"
+          className="flex items-center gap-1.5 text-xs text-[#8A8178] hover:text-[#2D2A26] disabled:text-[#8A8178]/30 disabled:pointer-events-none px-2 md:px-3 py-2 hover:bg-[#FAF8F5] rounded-xl transition duration-200 border border-transparent hover:border-[#E3DDD3] active:scale-95"
         >
-          <ChevronLeft className="w-4 h-4 text-[#5A5A40]" />
-          <span>Pagina anterioară</span>
+          <ChevronLeft className="w-5 h-5 text-[#5A5A40]" />
+          <span className="hidden sm:inline">Anterioară</span>
         </button>
 
-        {/* Core dynamic progress bar slider */}
-        <div className="w-1/2 max-w-sm hidden md:flex items-center gap-3">
-          <input 
+        {/* Progress bar — visible on all sizes */}
+        <div className="flex-1 mx-3 flex items-center gap-2 max-w-xs md:max-w-sm">
+          <input
             type="range"
             min={0}
             max={Math.max(1, paginatedPages.length - 1)}
             value={currentPageIndex}
             onChange={(e) => setCurrentPageIndex(Number(e.target.value))}
-            className="w-full h-1 bg-[#E3DDD3] rounded-lg appearance-none cursor-pointer accent-[#5A5A40]"
+            className="w-full h-1.5 bg-[#E3DDD3] rounded-lg appearance-none cursor-pointer accent-[#5A5A40]"
           />
-          <span className="font-mono text-xs text-[#8A8178] select-none flex-shrink-0">
+          <span className="font-mono text-[10px] text-[#8A8178] select-none flex-shrink-0 hidden sm:inline">
             {currentPageIndex + 1}/{paginatedPages.length}
           </span>
         </div>
@@ -1010,18 +1004,18 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
           id="nav-btn-next"
           onClick={handleNextPage}
           disabled={currentPageIndex + (settings.twoPageSpread ? 2 : 1) >= paginatedPages.length && currentChapterIndex + 1 >= book.chapters.length}
-          className="flex items-center gap-1.5 text-xs text-[#8A8178] hover:text-[#2D2A26] disabled:text-[#8A8178]/30 disabled:bg-transparent px-3 py-1.5 hover:bg-[#FAF8F5] rounded-lg transition duration-200 border border-transparent hover:border-[#E3DDD3]"
+          className="flex items-center gap-1.5 text-xs text-[#8A8178] hover:text-[#2D2A26] disabled:text-[#8A8178]/30 disabled:pointer-events-none px-2 md:px-3 py-2 hover:bg-[#FAF8F5] rounded-xl transition duration-200 border border-transparent hover:border-[#E3DDD3] active:scale-95"
         >
-          <span>Pagină următor</span>
-          <ChevronRight className="w-4 h-4 text-[#5A5A40]" />
+          <span className="hidden sm:inline">Următoarea</span>
+          <ChevronRight className="w-5 h-5 text-[#5A5A40]" />
         </button>
       </footer>
 
       {/* ==================== PANEL ADJUST DECOR STYLES ==================== */}
       {showSettings && (
-        <div 
+        <div
           id="adjust-settings-flyout"
-          className="fixed top-16 right-4 z-50 w-80 bg-white border border-[#E3DDD3] rounded-2xl p-5 shadow-xl animate-scale-up text-[#4A443F]"
+          className="fixed top-14 md:top-16 right-0 md:right-4 z-50 w-full md:w-80 max-h-[80vh] overflow-y-auto bg-white border-t md:border border-[#E3DDD3] md:rounded-2xl p-4 md:p-5 shadow-xl animate-scale-up text-[#4A443F]"
         >
           <div className="flex items-center justify-between border-b border-[#E3DDD3] pb-3 mb-4">
             <h4 className="font-serif italic font-bold text-[#2D2A26] flex items-center gap-1.5 text-sm">
@@ -1219,9 +1213,9 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
           className="fixed inset-0 z-50 bg-black/30 backdrop-blur-[2px] flex justify-start animate-fade-in"
           onClick={() => setShowChapters(false)}
         >
-          <div 
+          <div
             id="chapters-sidebar"
-            className="w-full max-w-sm bg-white h-full border-r border-[#E3DDD3] flex flex-col animate-slide-right shadow-2xl text-[#4A443F]"
+            className="w-full sm:max-w-sm bg-white h-full border-r border-[#E3DDD3] flex flex-col animate-slide-right shadow-2xl text-[#4A443F]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5 border-b border-[#E3DDD3] flex justify-between items-center bg-[#FBF9F6]">

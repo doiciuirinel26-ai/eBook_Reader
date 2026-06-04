@@ -315,10 +315,10 @@ export default function App() {
         </div>
       ) : (
         /* Standard Library Shelf and Statistics view */
-        <main key="library" id="library-dashboard" className="relative z-10 flex-grow max-w-7xl mx-auto w-full px-6 py-8 md:py-12 space-y-12 animate-fade-in-up">
+        <main key="library" id="library-dashboard" className="relative z-10 flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 md:py-12 space-y-8 md:space-y-12 animate-fade-in-up">
           
           {/* Dashboard Intro Hero Banner block */}
-          <section id="hero-welcome-banner" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#FBF9F6] border border-[#E3DDD3] p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden">
+          <section id="hero-welcome-banner" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-[#FBF9F6] border border-[#E3DDD3] p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#5A5A40]/5 rounded-full blur-3xl pointer-events-none" />
             
             <div className="lg:col-span-8 space-y-4">
@@ -326,7 +326,7 @@ export default function App() {
                 <Sparkles className="w-3.5 h-3.5" />
                 Interfață pură • Pure UI
               </span>
-              <h2 className="text-3xl md:text-4xl font-serif italic font-bold tracking-tight text-[#2D2A26] leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif italic font-bold tracking-tight text-[#2D2A26] leading-tight">
                 {t('welcomeTitle')} <span className="underline decoration-[#C2BCAE]">{t('welcomeTitleAccent')}</span>
               </h2>
               <p className="text-sm text-[#8A8178] font-light leading-relaxed max-w-2xl">
@@ -517,9 +517,9 @@ export default function App() {
               </div>
             ) : (
               /* Shelf Items grid layout showing premium 3D covers */
-              <div 
+              <div
                 id="bookshelf-grid"
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8 justify-items-center"
+                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 justify-items-center"
               >
                 {books.map(book => (
                   <LibraryBookCard 

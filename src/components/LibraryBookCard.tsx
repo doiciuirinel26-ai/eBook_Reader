@@ -55,7 +55,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
   return (
     <div 
       id={`book-card-${book.id}`}
-      className="group relative flex flex-col w-full max-w-[210px] sm:max-w-xs bg-white border border-[#E3DDD3] rounded-2xl p-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+      className="group relative flex flex-col w-full max-w-[180px] sm:max-w-[210px] bg-white border border-[#E3DDD3] rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
     >
       {/* 3D Realistic Cardboard Book Cover Container */}
       <div 
@@ -129,7 +129,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
           )}
         </div>
 
-        <p className="text-[11px] text-[#8A8178] line-clamp-2 mt-1 leading-relaxed min-h-[32px]">
+        <p className="text-[11px] text-[#8A8178] line-clamp-2 mt-1 leading-relaxed min-h-[32px] hidden sm:block">
           {book.description || 'Fără descriere disponibilă.'}
         </p>
 
