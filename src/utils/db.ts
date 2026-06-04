@@ -54,12 +54,15 @@ export async function getLibraryBooks(): Promise<Book[]> {
 
       request.onsuccess = () => {
         const books = request.result as Book[];
+        const existingIds = new Set(books.map(b => b.id));
+        const missing = DEFAULT_BOOKS.filter(b => !existingIds.has(b.id));
+        if (missing.length > 0) {
+          saveDefaultBooks(db, missing);
+        }
         if (books.length === 0) {
-          // Seed default books
-          saveDefaultBooks(db, DEFAULT_BOOKS);
           resolve(DEFAULT_BOOKS);
         } else {
-          resolve(books);
+          resolve([...books, ...missing]);
         }
       };
 
