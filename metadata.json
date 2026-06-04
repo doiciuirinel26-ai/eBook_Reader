@@ -1,0 +1,6 @@
+{
+  "name": "eBook Reader Realist",
+  "description": "Un cititor interactiv de cărți electronice cu efect 3D de paginare, import de fișiere EPUB și TXT, bibliotecă personală, fonturi și culori personalizabile.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
