@@ -741,6 +741,12 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             width: '100%',
             maxWidth: '1120px',
             aspectRatio: '1.45/1',
+          } : isMobile ? {
+            backgroundColor: book.coverColor,
+            width: '100%',
+            maxWidth: '520px',
+            height: 'calc(100dvh - 130px)',
+            maxHeight: '100%',
           } : {
             backgroundColor: book.coverColor,
             width: '100%',
