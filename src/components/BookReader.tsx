@@ -550,7 +550,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             className="flex items-center gap-1 text-sm text-[#8A8178] hover:text-[#2D2A26] px-2 py-1.5 hover:bg-[#FAF8F5] rounded-xl transition duration-200 border border-transparent hover:border-[#E3DDD3]"
           >
             <ChevronLeft className="w-5 h-5 text-[#5A5A40]" />
-            <span className="font-sans hidden sm:inline">Bibliotecă</span>
+            <span className="font-sans hidden sm:inline">{t('library')}</span>
           </button>
 
           <div className="hidden sm:flex items-center gap-2 border-l border-[#E3DDD3] pl-3">
@@ -587,10 +587,10 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                 ? 'border-[#5A5A40]/30 text-[#5A5A40] bg-[#5A5A40]/10 font-bold' 
                 : 'border-transparent text-[#8A8178] hover:text-[#2D2A26] hover:bg-[#FAF8F5]'
             }`}
-            title={isPageBookmarked ? 'Șterge marcajul' : 'Salvează această pagină (Marcaj)'}
+            title={isPageBookmarked ? t('marked') : t('markPage')}
           >
             <Bookmark className={`w-5 h-5 ${isPageBookmarked ? 'fill-[#5A5A40]' : ''}`} />
-            <span className="hidden lg:inline font-sans">{isPageBookmarked ? 'Marcat' : 'Marchează'}</span>
+            <span className="hidden lg:inline font-sans">{isPageBookmarked ? t('marked') : t('markPage')}</span>
           </button>
 
           <button
@@ -599,10 +599,10 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             className={`p-2 rounded-xl transition duration-200 flex items-center gap-1 text-sm ${
               showChapters && sidebarTab === 'chapters' ? 'bg-[#5A5A40] text-[#F5F2ED] font-bold' : 'text-[#8A8178] hover:text-[#2D2A26] hover:bg-[#FAF8F5]'
             }`}
-            title="Cuprins"
+            title={t('chapters')}
           >
             <Menu className="w-5 h-5" />
-            <span className="hidden lg:inline font-sans font-medium">Cuprins</span>
+            <span className="hidden lg:inline font-sans font-medium">{t('chapters')}</span>
           </button>
 
           <button
@@ -630,10 +630,10 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             className={`p-2 rounded-xl transition duration-200 flex items-center gap-1 text-sm ${
               showSettings ? 'border border-[#5A5A40]/30 text-[#5A5A40] bg-[#5A5A40]/10' : 'text-[#8A8178] hover:text-[#2D2A26] hover:bg-[#FAF8F5]'
             }`}
-            title="Formatare text"
+            title={t('adjustSettings')}
           >
             <Settings className="w-5 h-5" />
-            <span className="hidden lg:inline font-sans">Ajustează</span>
+            <span className="hidden lg:inline font-sans">{t('adjustSettings')}</span>
           </button>
         </div>
       </header>
@@ -1051,7 +1051,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
           <div className="flex items-center justify-between border-b border-[#E3DDD3] pb-3 mb-4">
             <h4 className="font-serif italic font-bold text-[#2D2A26] flex items-center gap-1.5 text-sm">
               <Settings className="w-4 h-4 text-[#5A5A40]" />
-              Adjustare Aspect Vizual
+              {t('settingsTitle')}
             </h4>
             <button 
               id="close-adjust-btn"
@@ -1066,7 +1066,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             
             {/* Theme Page Custom Color Picker */}
             <div>
-              <label className="block text-[11px] font-mono text-[#8A8178] mb-2 uppercase tracking-wider">TEMA DE CULORI</label>
+              <label className="block text-[11px] font-mono text-[#8A8178] mb-2 uppercase tracking-wider">{t('colorTheme')}</label>
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 <button
                   id="theme-btn-parchment"
@@ -1115,7 +1115,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             <div className="border border-[#E3DDD3] rounded-xl p-3 bg-[#FAF8F5]">
               <label className="block text-[11px] font-mono text-[#8A8178] mb-2 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-[#5A5A40]" />
-                TRADUCERE AI (necesită cheie Gemini)
+                {t('aiTranslationLabel')}
               </label>
               <div className="flex items-center gap-2">
                 <select
@@ -1150,7 +1150,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
             {/* Typography Selector */}
             <div>
-              <label className="block text-[11px] font-mono text-[#8A8178] mb-2 uppercase tracking-wider">FONTUL TEXTULUI</label>
+              <label className="block text-[11px] font-mono text-[#8A8178] mb-2 uppercase tracking-wider">{t('fontFamilyLabel')}</label>
               <div className="space-y-1">
                 {[
                   { value: 'serif-merriweather', label: 'Gentium Basic (Serif Clasic)' },
@@ -1178,7 +1178,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             {/* Sizing Layout */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-mono text-[#8A8178] mb-1.5 uppercase tracking-wider">MĂRIME FONT</label>
+                <label className="block text-[11px] font-mono text-[#8A8178] mb-1.5 uppercase tracking-wider">{t('fontSizeLabel')}</label>
                 <div className="flex items-center gap-1.5">
                   <button
                     id="decrease-size-btn"
@@ -1199,7 +1199,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-[#8A8178] mb-1.5 uppercase tracking-wider">SPAȚIERE RÂNDURI</label>
+                <label className="block text-[11px] font-mono text-[#8A8178] mb-1.5 uppercase tracking-wider">{t('lineSpacingLabel')}</label>
                 <div className="flex items-center gap-1">
                   {[1.4, 1.6, 1.8].map(lh => (
                     <button
@@ -1219,7 +1219,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             {/* Pagination manual spread toggle (visible only on tablet) */}
             {!isMobile && (
               <div className="pt-2 border-t border-[#E3DDD3] flex items-center justify-between">
-                <span className="text-[11px] font-mono text-[#8A8178] uppercase tracking-wider">Aspect Dublă Pagină:</span>
+                <span className="text-[11px] font-mono text-[#8A8178] uppercase tracking-wider">{t('twoPageToggle')}:</span>
                 <button
                   id="toggle-spread-btn"
                   onClick={() => setSettings(prev => ({ ...prev, twoPageSpread: !prev.twoPageSpread }))}
@@ -1228,7 +1228,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                   }`}
                 >
                   <Columns className="w-3.5 h-3.5" />
-                  <span>{settings.twoPageSpread ? 'ACTIV' : 'OPRIT'}</span>
+                  <span>{settings.twoPageSpread ? t('statusOn') : t('statusOff')}</span>
                 </button>
               </div>
             )}
@@ -1252,7 +1252,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             <div className="p-5 border-b border-[#E3DDD3] flex justify-between items-center bg-[#FBF9F6]">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-[#5A5A40]" />
-                <h4 className="font-serif italic font-bold text-[#2D2A26] text-base">EXPLOREAZĂ CARTEA</h4>
+                <h4 className="font-serif italic font-bold text-[#2D2A26] text-base">{t('exploreBook')}</h4>
               </div>
               <button 
                 id="close-chapters-btn"
@@ -1283,7 +1283,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                 }`}
                 onClick={() => setSidebarTab('chapters')}
               >
-                CUPRINS
+                {t('chapters').toUpperCase()}
               </button>
               <button
                 id="sidebar-tab-bookmarks"
@@ -1294,7 +1294,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                 }`}
                 onClick={() => setSidebarTab('bookmarks')}
               >
-                MARCAJE ({(book.bookmarks || []).length})
+                {t('bookmarks').toUpperCase()} ({(book.bookmarks || []).length})
               </button>
               <button
                 id="sidebar-tab-search"
@@ -1310,7 +1310,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                   }, 100);
                 }}
               >
-                CĂUTARE
+                {t('search').toUpperCase()}
               </button>
             </div>
 
@@ -1344,7 +1344,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                         <p className="text-xs line-clamp-1 truncate">{chapter.title}</p>
                         <p className="text-[10px] text-[#8A8178]/80 mt-1 font-light flex items-center gap-1">
                           <Eye className="w-3 h-3 text-[#5A5A40]/60" />
-                          <span>Sari direct la capitolul acesta</span>
+                          <span>{t('jumpToChapter')}</span>
                         </p>
                       </div>
                     </button>
@@ -1357,9 +1357,9 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                     <div className="w-10 h-10 rounded-full bg-[#FAF8F5] border border-[#E3DDD3] flex items-center justify-center text-[#8A8178] mx-auto">
                       <Bookmark className="w-5 h-5" />
                     </div>
-                    <p className="text-xs text-[#2D2A26] font-bold">Niciun marcaj pe acest volum</p>
-                    <p className="text-[11px] text-[#8A8178] leading-relaxed font-light">
-                      În timp ce citiți operele preferate, apăsați pe butonul <b>„Marchează”</b> din bara de sus pentru a salva progresul sau paragrafele din pagină.
+                    <p className=”text-xs text-[#2D2A26] font-bold”>{t('noBookmarksTitle')}</p>
+                    <p className=”text-[11px] text-[#8A8178] leading-relaxed font-light”>
+                      {t('noBookmarksTip')}
                     </p>
                   </div>
                 ) : (
@@ -1496,8 +1496,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             </div>
 
             <div className="p-4 bg-[#FBF9F6] border-t border-[#E3DDD3] flex items-center justify-between text-[10px] text-[#8A8178] font-mono">
-              <span>Totul este optimizat</span>
-              <span className="text-[#5A5A40] font-bold">ro-eBook Realist</span>
+              <span>{t('allOptimized')}</span>
+              <span className="text-[#5A5A40] font-bold">{t('appName')}</span>
             </div>
           </div>
         </div>

@@ -147,7 +147,7 @@ export default function App() {
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#8A8178]/3 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Main navigation header header block */}
-      <header id="main-navigation-header" className="relative z-10 border-b border-[#E3DDD3] bg-[#FBF9F6] px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-xs">
+      <header id="main-navigation-header" className="relative z-50 border-b border-[#E3DDD3] bg-[#FBF9F6] px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#5A5A40] rounded-xl flex items-center justify-center shadow-md">
             <Feather className="w-5.5 h-5.5 text-[#F5F2ED] stroke-[2]" />
@@ -268,7 +268,7 @@ export default function App() {
             }`}
           >
             <Library className="w-4 h-4" />
-            <span className="text-[10px]">Bibliotecă</span>
+            <span className="text-[10px]">{t('library')}</span>
           </button>
                  <button
             onClick={() => { setActiveTab('author'); setSelectedBook(null); }}

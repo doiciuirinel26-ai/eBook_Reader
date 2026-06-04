@@ -1,6 +1,7 @@
 import React from 'react';
 import { Book } from '../types';
 import { BookOpen, Calendar, Trash2, Milestone } from 'lucide-react';
+import { useTranslation } from '../utils/localization';
 
 interface LibraryBookCardProps {
   book: Book;
@@ -9,6 +10,7 @@ interface LibraryBookCardProps {
 }
 
 export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, onDelete }) => {
+  const { t } = useTranslation();
   // Generate a procedural texture pattern based on the coverDesign property
   const getPatternOverlay = () => {
     switch (book.coverDesign) {
@@ -94,7 +96,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
 
           <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono tracking-wider opacity-75 mt-auto">
             <BookOpen className="w-3.5 h-3.5 text-amber-300" />
-            <span>CITEȘTE</span>
+            <span>{t('readBook')}</span>
           </div>
         </div>
 
@@ -110,7 +112,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
               {book.title}
             </h4>
             <p className="text-xs text-[#8A8178] font-light italic">
-              de {book.author}
+              {t('authorPrefix')} {book.author}
             </p>
           </div>
           
@@ -148,7 +150,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
               </span>
             </div>
           ) : (
-            <span className="text-[#A69E93]">Necitită</span>
+            <span className="text-[#A69E93]">{t('unread')}</span>
           )}
         </div>
       </div>
