@@ -22,6 +22,72 @@ import {
   Search
 } from 'lucide-react';
 
+interface BookmarksListProps {
+  bookmarks: import('../types').Bookmark[];
+  currentChapterIndex: number;
+  currentPageIndex: number;
+  onNavigate: (chapterIndex: number, pageIndex: number) => void;
+  onDelete: (id: string) => void;
+  noBookmarksTitle: string;
+  noBookmarksTip: string;
+}
+
+const BookmarksList: React.FC<BookmarksListProps> = ({
+  bookmarks, currentChapterIndex, currentPageIndex,
+  onNavigate, onDelete, noBookmarksTitle, noBookmarksTip
+}) => {
+  if (bookmarks.length === 0) {
+    return (
+      <div className="text-center py-16 px-6 space-y-3">
+        <div className="w-10 h-10 rounded-full bg-[#FAF8F5] border border-[#E3DDD3] flex items-center justify-center text-[#8A8178] mx-auto">
+          <Bookmark className="w-5 h-5" />
+        </div>
+        <p className="text-xs text-[#2D2A26] font-bold">{noBookmarksTitle}</p>
+        <p className="text-[11px] text-[#8A8178] leading-relaxed font-light">{noBookmarksTip}</p>
+      </div>
+    );
+  }
+  return (
+    <>
+      {bookmarks.map((bookmark) => {
+        const isCurrent = bookmark.chapterIndex === currentChapterIndex && bookmark.pageIndex === currentPageIndex;
+        return (
+          <div
+            key={bookmark.id}
+            className={`p-3.5 rounded-xl border transition flex gap-3 items-start relative hover:shadow-xs group ${
+              isCurrent
+                ? 'border-[#5A5A40] bg-[#5A5A40]/5 ring-2 ring-[#5A5A40]/5'
+                : 'border-[#E3DDD3] bg-[#FAF8F5]/10 hover:border-[#D8D2C6]'
+            }`}
+          >
+            <button
+              onClick={() => onNavigate(bookmark.chapterIndex, bookmark.pageIndex)}
+              className="flex-1 text-left min-w-0"
+              title="Navighează la această pagină"
+            >
+              <div className="flex items-center gap-1 mb-1 text-[10px] font-bold text-[#5A5A40] font-mono">
+                <Bookmark className="w-3 h-3 fill-[#5A5A40]" />
+                <span>CAP. {bookmark.chapterIndex + 1} • PAGINA {bookmark.pageIndex + 1}</span>
+              </div>
+              <p className="text-xs text-[#2D2A26] font-serif italic line-clamp-2 border-l-2 border-[#E3DDD3] pl-2 py-0.5 my-1.5 bg-[#FAF8F5]/30">
+                {`„${bookmark.previewText}"`}
+              </p>
+              <span className="text-[9px] text-[#8A8178] font-mono">Salvat la: {bookmark.dateAdded}</span>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }}
+              className="p-1 rounded-lg hover:bg-red-50 text-[#8A8178] hover:text-red-600 border border-transparent hover:border-red-100 transition self-start flex-shrink-0"
+              title="Șterge marcajul"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
 interface BookReaderProps {
   book: Book;
   onClose: () => void;
@@ -1351,67 +1417,21 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                   );
                 })
               ) : sidebarTab === 'bookmarks' ? (
-                /* Bookmarks selection list */
-                (!book.bookmarks || book.bookmarks.length === 0) ? (
-                  <div className="text-center py-16 px-6 space-y-3">
-                    <div className="w-10 h-10 rounded-full bg-[#FAF8F5] border border-[#E3DDD3] flex items-center justify-center text-[#8A8178] mx-auto">
-                      <Bookmark className="w-5 h-5" />
-                    </div>
-                    <p className=”text-xs text-[#2D2A26] font-bold”>{t('noBookmarksTitle')}</p>
-                    <p className=”text-[11px] text-[#8A8178] leading-relaxed font-light”>
-                      {t('noBookmarksTip')}
-                    </p>
-                  </div>
-                ) : (
-                  book.bookmarks.map((bookmark) => {
-                    const isCurrent = bookmark.chapterIndex === currentChapterIndex && bookmark.pageIndex === currentPageIndex;
-                    return (
-                      <div
-                        key={bookmark.id}
-                        className={`p-3.5 rounded-xl border transition flex gap-3 items-start relative hover:shadow-xs group ${
-                          isCurrent
-                            ? 'border-[#5A5A40] bg-[#5A5A40]/5 ring-2 ring-[#5A5A40]/5'
-                            : 'border-[#E3DDD3] bg-[#FAF8F5]/10 hover:border-[#D8D2C6]'
-                        }`}
-                      >
-                        <button
-                          onClick={() => {
-                            setCurrentChapterIndex(bookmark.chapterIndex);
-                            setCurrentPageIndex(bookmark.pageIndex);
-                            setShowChapters(false);
-                            if (soundEnabled) playPageTurnSound();
-                          }}
-                          className="flex-1 text-left min-w-0"
-                          title="Navighează la această pagină"
-                        >
-                          <div className="flex items-center gap-1 mb-1 text-[10px] font-bold text-[#5A5A40] font-mono">
-                            <Bookmark className="w-3 h-3 fill-[#5A5A40]" />
-                            <span>CAP. {bookmark.chapterIndex + 1} • PAGINA {bookmark.pageIndex + 1}</span>
-                          </div>
-                          <p className="text-xs text-[#2D2A26] font-serif italic line-clamp-2 border-l-2 border-[#E3DDD3] pl-2 py-0.5 my-1.5 bg-[#FAF8F5]/30">
-                            „{bookmark.previewText}”
-                          </p>
-                          <span className="text-[9px] text-[#8A8178] font-mono">
-                            Salvat la: {bookmark.dateAdded}
-                          </span>
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteBookmark(bookmark.id);
-                          }}
-                          className="p-1 rounded-lg hover:bg-red-50 text-[#8A8178] hover:text-red-600 border border-transparent hover:border-red-100 transition self-start flex-shrink-0"
-                          title="Șterge marcajul"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    );
-                  })
-                )
+                <BookmarksList
+                  bookmarks={book.bookmarks || []}
+                  currentChapterIndex={currentChapterIndex}
+                  currentPageIndex={currentPageIndex}
+                  onNavigate={(chapterIndex, pageIndex) => {
+                    setCurrentChapterIndex(chapterIndex);
+                    setCurrentPageIndex(pageIndex);
+                    setShowChapters(false);
+                    if (soundEnabled) playPageTurnSound();
+                  }}
+                  onDelete={handleDeleteBookmark}
+                  noBookmarksTitle={t('noBookmarksTitle')}
+                  noBookmarksTip={t('noBookmarksTip')}
+                />
               ) : (
-                /* Search Tab */
                 <div className="space-y-4 pt-2">
                   <div className="relative">
                     <input
