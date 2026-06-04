@@ -311,3 +311,112 @@ body {
   transform: translate(6px, -6px) scale(1.4);
   box-shadow: 5px -5px 12px rgba(0,0,0,0.2), inset -2px 2px 4px rgba(255,255,255,0.4);
 }
+
+/* Reader entrance / exit transitions */
+@keyframes reader-open {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes reader-close {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.98) translateY(12px);
+  }
+}
+
+.animate-reader-open {
+  animation: reader-open 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Tab content fade-in transition */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Modal / panel scale-up entrance */
+@keyframes scale-up {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-scale-up {
+  animation: scale-up 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Page content typography — clean, no prose plugin needed */
+.page-text-content {
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-text-content p {
+  text-indent: 1.5em;
+  text-align: justify;
+  margin-bottom: 0.9em;
+  hyphens: auto;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.page-text-content p:first-child {
+  text-indent: 0;
+}
+
+.page-text-content h2 {
+  font-size: 1.15em;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1em;
+  margin-top: 0.5em;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.4em;
+  opacity: 0.85;
+}
+
+.page-text-content blockquote {
+  padding-left: 1em;
+  border-left: 3px solid currentColor;
+  font-style: italic;
+  margin: 0.8em 0;
+  opacity: 0.75;
+}
+
+/* Roll-down bookmark ribbon animation */
+@keyframes roll-down {
+  0% { height: 0; }
+  100% { height: 5rem; }
+}
+
+.animate-roll-down {
+  animation: roll-down 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

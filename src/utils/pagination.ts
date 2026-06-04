@@ -51,12 +51,12 @@ export function paginateChapterContent(
   }
 
   // 2. Determine word capacity per page dynamically
-  // A standard premium page holds roughly 240 words at 18px font.
-  const baseWordsPerPage = isMobile ? 120 : 250;
-  
+  // Two-page spread has half the width per page, so fewer words per side
+  const baseWordsPerPage = isMobile ? 130 : (settings.twoPageSpread ? 200 : 220);
+
   // Inverse exponential scale for font sizing (larger fonts -> fewer words per page)
-  const scale = Math.pow(18 / settings.fontSize, 1.4);
-  const wordsPerPageLimit = Math.max(70, Math.floor(baseWordsPerPage * scale));
+  const scale = Math.pow(18 / settings.fontSize, 1.3);
+  const wordsPerPageLimit = Math.max(60, Math.floor(baseWordsPerPage * scale));
 
   const pages: string[] = [];
   let currentPageParagraphs: string[] = [];
@@ -140,12 +140,12 @@ export function paginateChapterContent(
  */
 function formatParagraph(text: string, isHeader: boolean, isQuote: boolean): string {
   if (isHeader) {
-    return `<h2 class="text-xl md:text-2xl font-bold font-serif mb-6 mt-4 text-center border-b pb-2 tracking-tight opacity-95">${text}</h2>`;
+    return `<h2>${text}</h2>`;
   }
   if (isQuote) {
-    return `<blockquote class="pl-4 border-l-4 border-amber-800/40 italic my-4 text-amber-900/80 dark:text-neutral-300 font-serif leading-relaxed text-sm md:text-base">${text}</blockquote>`;
+    return `<blockquote>${text}</blockquote>`;
   }
-  return `<p class="indent-6 text-justify mb-4 leading-relaxed tracking-wide">${text}</p>`;
+  return `<p>${text}</p>`;
 }
 
 /**

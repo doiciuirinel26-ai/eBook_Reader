@@ -138,6 +138,24 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
     }
   };
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        handleNextPage();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        handlePrevPage();
+      } else if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPageIndex, currentChapterIndex, isTurning, paginatedPages.length]);
+
   // Swipe Gestures
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
@@ -491,9 +509,9 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
   const currentChapterTitle = getActiveChapterContent().title || 'Capitol';
 
   return (
-    <div 
+    <div
       id="reader-workspace"
-      className="fixed inset-0 z-40 bg-[#4A443F] flex flex-col overflow-hidden select-none"
+      className="fixed inset-0 z-40 bg-[#4A443F] flex flex-col overflow-hidden select-none animate-reader-open"
     >
       {/* Tabletop background wood layout */}
       <div className="absolute inset-0 bg-wood-texture opacity-30 select-none pointer-events-none" />
@@ -536,40 +554,6 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
         {/* Interaction control triggers */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* AI Page Translation Selector */}
-          <div className="relative flex items-center bg-[#FAF8F5] border border-[#E3DDD3] rounded-full px-2 py-1 h-9 shadow-2xs hover:border-[#5A5A40] transition">
-            <span className="text-xs text-[#8A8178] px-1 animate-pulse">
-              {isTranslating ? '⏳' : '🌐'}
-            </span>
-            <select
-              value={readingLanguage}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === 'original') {
-                  setReadingLanguage('original');
-                } else {
-                  // Check if translation exists, else trigger it!
-                  const chapter = book.chapters?.[currentChapterIndex];
-                  if (chapter && chapter.translations?.[val]) {
-                    setReadingLanguage(val);
-                  } else {
-                    handleTranslateChapter(val);
-                  }
-                }
-              }}
-              disabled={isTranslating}
-              className="bg-transparent text-[11px] font-mono font-medium text-[#4A443F] focus:outline-none pr-1 cursor-pointer max-w-[85px] sm:max-w-[120px] outline-none border-none border-transparent mr-1"
-              title="Traducere automată capitol / Auto translation"
-            >
-              <option value="original">🌐 Original</option>
-              {LANGUAGES.map(lang => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.flag} {lang.label} {book.chapters?.[currentChapterIndex]?.translations?.[lang.code] ? '' : '✨'}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <button
             id="toggle-sound-btn"
             onClick={() => setSoundEnabled(!soundEnabled)}
@@ -650,7 +634,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
           id="lounge-nav-prev"
           onClick={handlePrevPage}
           disabled={currentPageIndex === 0 && currentChapterIndex === 0}
-          className="absolute left-6 z-20 p-3 bg-neutral-900/60 backdrop-blur-sm border border-neutral-800 text-neutral-300 hover:text-white rounded-full opacity-0 hover:opacity-100 disabled:opacity-0 transition-all duration-300 shadow-2xl cursor-pointer"
+          className="absolute left-4 z-20 p-3 bg-black/30 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-black/50 rounded-full opacity-40 hover:opacity-100 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200 shadow-xl cursor-pointer"
+          title="Pagina anterioară (←)"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -659,7 +644,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
           id="lounge-nav-next"
           onClick={handleNextPage}
           disabled={currentPageIndex + (settings.twoPageSpread ? 2 : 1) >= paginatedPages.length && currentChapterIndex + 1 >= book.chapters.length}
-          className="absolute right-6 z-20 p-3 bg-neutral-900/60 backdrop-blur-sm border border-neutral-800 text-neutral-300 hover:text-white rounded-full opacity-0 hover:opacity-100 disabled:opacity-0 transition-all duration-300 shadow-2xl cursor-pointer"
+          className="absolute right-4 z-20 p-3 bg-black/30 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-black/50 rounded-full opacity-40 hover:opacity-100 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200 shadow-xl cursor-pointer"
+          title="Pagina următoare (→)"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -725,7 +711,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
                 {/* Left Page content body */}
                 <div 
-                  className={`flex-grow mt-8 overflow-hidden select-none prose ${getFontFamilyClass()}`}
+                  className={`flex-grow mt-6 overflow-hidden select-none page-text-content ${getFontFamilyClass()}`}
                   style={{ fontSize: `${settings.fontSize}px`, lineHeight: settings.lineHeight }}
                   dangerouslySetInnerHTML={{ __html: highlightHTML(paginatedPages[pageLeftIndex] || '', searchQuery) || '<div class="h-full flex items-center justify-center italic text-neutral-400">Sfârșitul cărții.</div>' }}
                 />
@@ -762,7 +748,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
                 {/* Right Page content body */}
                 <div 
-                  className={`flex-grow mt-8 overflow-hidden select-none prose ${getFontFamilyClass()}`}
+                  className={`flex-grow mt-6 overflow-hidden select-none page-text-content ${getFontFamilyClass()}`}
                   style={{ fontSize: `${settings.fontSize}px`, lineHeight: settings.lineHeight }}
                   dangerouslySetInnerHTML={{ __html: highlightHTML(paginatedPages[pageRightIndex] || '', searchQuery) || '<div class="h-full flex items-center justify-center italic text-neutral-400">Sfârșitul capitolului.</div>' }}
                 />
@@ -792,7 +778,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                     className="w-1/2 h-full opacity-60 p-8 md:p-12 pr-12 md:pr-14 relative flex flex-col justify-between overflow-hidden"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
-                    <div className="flex-grow mt-8 select-none prose" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: oldPageLeftContent }} />
+                    <div className="flex-grow mt-6 min-h-0 overflow-hidden select-none page-text-content" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: oldPageLeftContent }} />
                     <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-black/25 to-transparent z-10" />
                     {/* Shadow Sweep as turning page lands */}
                     <div className="absolute inset-0 shadow-cast-next-left pointer-events-none z-20" />
@@ -803,7 +789,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                     className="w-1/2 h-full p-8 md:p-12 pl-12 md:pl-14 relative flex flex-col justify-between overflow-hidden"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
-                    <div className="flex-grow mt-8 select-none prose" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: paginatedPages[currentPageIndex + 3] || '<div class="italic text-neutral-400">Sfârșitul cărții.</div>' }} />
+                    <div className="flex-grow mt-6 min-h-0 overflow-hidden select-none page-text-content" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: paginatedPages[currentPageIndex + 3] || '<div class="italic text-neutral-400">Sfârșitul cărții.</div>' }} />
                     <div className="absolute top-0 left-0 bottom-0 w-8 bg-gradient-to-r from-black/25 to-transparent z-10" />
                     {/* Lift-off shadow getting smaller */}
                     <div className="absolute inset-0 shadow-cast-next-right pointer-events-none z-20" />
@@ -859,7 +845,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                     className="w-1/2 h-full p-8 md:p-12 pr-12 md:pr-14 relative flex flex-col justify-between overflow-hidden"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
-                    <div className="flex-grow mt-8 select-none prose" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: paginatedPages[currentPageIndex - 2] || '<div class="italic text-neutral-400">Început de capitol.</div>' }} />
+                    <div className="flex-grow mt-6 min-h-0 overflow-hidden select-none page-text-content" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: paginatedPages[currentPageIndex - 2] || '<div class="italic text-neutral-400">Început de capitol.</div>' }} />
                     <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-black/25 to-transparent z-10" />
                     {/* Shadow Sweep as the page lifts off the left side */}
                     <div className="absolute inset-0 shadow-cast-prev-left pointer-events-none z-20" />
@@ -870,7 +856,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                     className="w-1/2 h-full opacity-60 p-8 md:p-12 pl-12 md:pl-14 relative flex flex-col justify-between overflow-hidden"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                   >
-                    <div className="flex-grow mt-8 select-none prose" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: oldPageRightContent }} />
+                    <div className="flex-grow mt-6 min-h-0 overflow-hidden select-none page-text-content" style={{ fontSize: `${settings.fontSize}px` }} dangerouslySetInnerHTML={{ __html: oldPageRightContent }} />
                     <div className="absolute top-0 left-0 bottom-0 w-8 bg-gradient-to-r from-black/25 to-transparent z-10" />
                     {/* Shadow Sweep as the turning page lands on the right side */}
                     <div className="absolute inset-0 shadow-cast-prev-right pointer-events-none z-20" />
@@ -957,7 +943,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
                 {/* Single Page content body */}
                 <div 
-                  className={`flex-grow mt-6 overflow-hidden select-none prose ${getFontFamilyClass()}`}
+                  className={`flex-grow mt-6 min-h-0 overflow-hidden select-none page-text-content ${getFontFamilyClass()}`}
                   style={{ fontSize: `${settings.fontSize - 1}px`, lineHeight: settings.lineHeight }}
                   dangerouslySetInnerHTML={{ __html: highlightHTML(paginatedPages[currentPageIndex] || '', searchQuery) || '<div class="h-full flex items-center justify-center italic text-neutral-400">Sfârșitul capitolului.</div>' }}
                 />
@@ -1097,6 +1083,43 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                   <div className="w-full h-3.5 rounded bg-[#5A5A40] border border-[#484833]" />
                   <span className="text-[#2D2A26] font-medium">Forest Sage</span>
                 </button>
+              </div>
+            </div>
+
+            {/* AI Translation — optional, only useful with Gemini API key */}
+            <div className="border border-[#E3DDD3] rounded-xl p-3 bg-[#FAF8F5]">
+              <label className="block text-[11px] font-mono text-[#8A8178] mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-[#5A5A40]" />
+                TRADUCERE AI (necesită cheie Gemini)
+              </label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={readingLanguage}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'original') {
+                      setReadingLanguage('original');
+                    } else {
+                      const chapter = book.chapters?.[currentChapterIndex];
+                      if (chapter && chapter.translations?.[val]) {
+                        setReadingLanguage(val);
+                      } else {
+                        handleTranslateChapter(val);
+                      }
+                    }
+                  }}
+                  disabled={isTranslating}
+                  className="flex-1 py-1.5 px-2 bg-white border border-[#E3DDD3] rounded text-xs font-mono text-[#4A443F] focus:outline-none focus:border-[#5A5A40] cursor-pointer"
+                >
+                  <option value="original">Original</option>
+                  {LANGUAGES.map(lang => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.label}
+                    </option>
+                  ))}
+                </select>
+                {isTranslating && <span className="text-xs text-[#8A8178] animate-pulse">Se traduce...</span>}
+                {translationErrorText && <span className="text-xs text-red-500">{translationErrorText}</span>}
               </div>
             </div>
 

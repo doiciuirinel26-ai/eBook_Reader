@@ -295,27 +295,27 @@ export default function App() {
       {/* Primary views panel switcher */}
       {selectedBook ? (
         /* Immersive 3D Reader Workspace opens full-screen */
-        <BookReader 
-          book={selectedBook} 
-          onClose={() => setSelectedBook(null)} 
+        <BookReader
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
           onProgressUpdate={loadBooksFromStore}
         />
       ) : activeTab === 'author' || activeTab === 'store' ? (
-        <AuthorStoreSuite
-          currentTab={activeTab}
-          onBookImported={async (newB) => {
-            // When a store item is downloaded, force reload shelf catalogue and switch view 
-            await loadBooksFromStore();
-            setActiveTab('library');
-          }}
-          onNavigateToLibrary={async () => {
-            // Focus on store catalog on publish
-            setActiveTab('store');
-          }}
-        />
+        <div key={activeTab} className="animate-fade-in-up">
+          <AuthorStoreSuite
+            currentTab={activeTab}
+            onBookImported={async (newB) => {
+              await loadBooksFromStore();
+              setActiveTab('library');
+            }}
+            onNavigateToLibrary={async () => {
+              setActiveTab('store');
+            }}
+          />
+        </div>
       ) : (
         /* Standard Library Shelf and Statistics view */
-        <main id="library-dashboard" className="relative z-10 flex-grow max-w-7xl mx-auto w-full px-6 py-8 md:py-12 space-y-12">
+        <main key="library" id="library-dashboard" className="relative z-10 flex-grow max-w-7xl mx-auto w-full px-6 py-8 md:py-12 space-y-12 animate-fade-in-up">
           
           {/* Dashboard Intro Hero Banner block */}
           <section id="hero-welcome-banner" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#FBF9F6] border border-[#E3DDD3] p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden">
