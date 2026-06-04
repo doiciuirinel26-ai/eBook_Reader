@@ -4,14 +4,14 @@ export function paginateChapterContent(
   content: string,
   settings: StyleSettings,
   isMobile: boolean,
-  containerHeight?: number
+  containerSize?: { w: number; h: number }
 ): string[] {
   const paragraphs = parseContent(content);
   if (paragraphs.length === 0) return [emptyPage()];
 
-  // DOM-based: accurate, accounts for real font size + line height
-  if (containerHeight && containerHeight > 80 && typeof document !== 'undefined') {
-    return domPaginate(paragraphs, settings, containerHeight);
+  // DOM-based: accurate, uses real rendered width + height
+  if (containerSize && containerSize.h > 80 && containerSize.w > 100 && typeof document !== 'undefined') {
+    return domPaginate(paragraphs, settings, containerSize.w, containerSize.h);
   }
 
   // Fallback when DOM not ready yet
@@ -55,6 +55,7 @@ function parseContent(content: string): string[] {
 function domPaginate(
   paragraphs: string[],
   settings: StyleSettings,
+  containerWidth: number,
   containerHeight: number
 ): string[] {
   const probe = document.createElement('div');
@@ -62,7 +63,7 @@ function domPaginate(
     'position:fixed',
     'top:-99999px',
     'left:-99999px',
-    'width:500px',
+    `width:${containerWidth}px`,
     `height:${containerHeight}px`,
     'overflow:hidden',
     `font-size:${settings.fontSize}px`,
@@ -72,6 +73,7 @@ function domPaginate(
     'box-sizing:border-box',
     'word-break:break-word',
     'overflow-wrap:break-word',
+    'hyphens:auto',
   ].join(';');
   document.body.appendChild(probe);
 
@@ -97,7 +99,7 @@ function domPaginate(
         probe.innerHTML = para;
         if (probe.scrollHeight > containerHeight) {
           // Split into sentences and paginate those
-          const sentencePages = splitLongParagraph(para, probe, containerHeight);
+          const sentencePages = splitLongParagraph(para, probe, containerWidth, containerHeight);
           const last = sentencePages.pop();
           sentencePages.forEach(sp => pages.push(sp));
           current = last ? [last] : [];
@@ -115,6 +117,7 @@ function domPaginate(
 function splitLongParagraph(
   para: string,
   probe: HTMLDivElement,
+  _width: number,
   maxHeight: number
 ): string[] {
   const text = para.replace(/<[^>]+>/g, '');

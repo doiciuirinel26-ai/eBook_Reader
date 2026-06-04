@@ -64,8 +64,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
   // Active paginated chapter details
   const [paginatedPages, setPaginatedPages] = useState<string[]>([]);
 
-  // Measured page content height for accurate DOM-based pagination
-  const [pageContentHeight, setPageContentHeight] = useState<number>(0);
+  // Measured page content dimensions for accurate DOM-based pagination
+  const [pageContentSize, setPageContentSize] = useState<{ w: number; h: number } | null>(null);
   const pageContentRef = useRef<HTMLDivElement>(null);
 
   // Observe page content area resize to re-paginate on window resize
@@ -73,8 +73,10 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
     const el = pageContentRef.current;
     if (!el) return;
     const ro = new ResizeObserver(entries => {
-      const h = entries[0]?.contentRect.height ?? 0;
-      if (h > 80) setPageContentHeight(h);
+      const rect = entries[0]?.contentRect;
+      if (rect && rect.height > 80 && rect.width > 100) {
+        setPageContentSize({ w: Math.floor(rect.width), h: Math.floor(rect.height) });
+      }
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -190,7 +192,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Recalculate pages when content, styles, or measured container height changes
+  // Recalculate pages when content, styles, or measured container size changes
   useEffect(() => {
     if (book.chapters && book.chapters[currentChapterIndex]) {
       const activeContent = getActiveChapterContent();
@@ -198,7 +200,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
         activeContent.content,
         settings,
         isMobile,
-        pageContentHeight > 80 ? pageContentHeight : undefined
+        pageContentSize ?? undefined
       );
       setPaginatedPages(pages);
 
@@ -206,7 +208,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
         setCurrentPageIndex(Math.max(0, pages.length - 1));
       }
     }
-  }, [book, currentChapterIndex, readingLanguage, settings, isMobile, pageContentHeight]);
+  }, [book, currentChapterIndex, readingLanguage, settings, isMobile, pageContentSize]);
 
   // Push reading progression back to indexedDB
   useEffect(() => {
