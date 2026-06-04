@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Book, StyleSettings, PageData } from '../types';
 import { paginateChapterContent } from '../utils/pagination';
 import { playPageTurnSound } from '../utils/audio';
@@ -63,7 +63,23 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
   // Active paginated chapter details
   const [paginatedPages, setPaginatedPages] = useState<string[]>([]);
-  
+
+  // Measured page content height for accurate DOM-based pagination
+  const [pageContentHeight, setPageContentHeight] = useState<number>(0);
+  const pageContentRef = useRef<HTMLDivElement>(null);
+
+  // Observe page content area resize to re-paginate on window resize
+  useEffect(() => {
+    const el = pageContentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const h = entries[0]?.contentRect.height ?? 0;
+      if (h > 80) setPageContentHeight(h);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Custom 3D Animation states
   const [isTurning, setIsTurning] = useState<boolean>(false);
   const [turnDirection, setTurnDirection] = useState<'next' | 'prev' | null>(null);
@@ -174,19 +190,23 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Recalculate pages when content or styles change
+  // Recalculate pages when content, styles, or measured container height changes
   useEffect(() => {
     if (book.chapters && book.chapters[currentChapterIndex]) {
       const activeContent = getActiveChapterContent();
-      const pages = paginateChapterContent(activeContent.content, settings, isMobile);
+      const pages = paginateChapterContent(
+        activeContent.content,
+        settings,
+        isMobile,
+        pageContentHeight > 80 ? pageContentHeight : undefined
+      );
       setPaginatedPages(pages);
-      
-      // Safety check on loaded page index
+
       if (currentPageIndex >= pages.length) {
         setCurrentPageIndex(Math.max(0, pages.length - 1));
       }
     }
-  }, [book, currentChapterIndex, readingLanguage, settings, isMobile]);
+  }, [book, currentChapterIndex, readingLanguage, settings, isMobile, pageContentHeight]);
 
   // Push reading progression back to indexedDB
   useEffect(() => {
@@ -703,8 +723,9 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                   </button>
                 </div>
 
-                {/* Left Page content body */}
-                <div 
+                {/* Left Page content body — ref measures available height for DOM pagination */}
+                <div
+                  ref={pageContentRef}
                   className={`flex-grow mt-6 overflow-hidden select-none page-text-content ${getFontFamilyClass()}`}
                   style={{ fontSize: `${settings.fontSize}px`, lineHeight: settings.lineHeight }}
                   dangerouslySetInnerHTML={{ __html: highlightHTML(paginatedPages[pageLeftIndex] || '', searchQuery) || '<div class="h-full flex items-center justify-center italic text-neutral-400">Sfârșitul cărții.</div>' }}
@@ -936,7 +957,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                 </div>
 
                 {/* Single Page content body */}
-                <div 
+                <div
+                  ref={pageContentRef}
                   className={`flex-grow mt-6 min-h-0 overflow-hidden select-none page-text-content ${getFontFamilyClass()}`}
                   style={{ fontSize: `${Math.max(15, settings.fontSize - 1)}px`, lineHeight: settings.lineHeight }}
                   dangerouslySetInnerHTML={{ __html: highlightHTML(paginatedPages[currentPageIndex] || '', searchQuery) || '<div class="h-full flex items-center justify-center italic text-neutral-400">Sfârșitul capitolului.</div>' }}

@@ -1,169 +1,174 @@
 import { StyleSettings } from '../types';
 
-/**
- * Intelligently splits a chapter's content into pages based on style configuration and responsive screen layout.
- * We use sentence-boundary grouping to ensure pages end at natural sentence limits rather than chopped-up words,
- * and we scale capacity dynamically according to font size and dual/single-page setup.
- */
 export function paginateChapterContent(
   content: string,
   settings: StyleSettings,
-  isMobile: boolean
+  isMobile: boolean,
+  containerHeight?: number
 ): string[] {
-  // 1. Create a virtual DOM parser to handle rich HTML content securely
+  const paragraphs = parseContent(content);
+  if (paragraphs.length === 0) return [emptyPage()];
+
+  // DOM-based: accurate, accounts for real font size + line height
+  if (containerHeight && containerHeight > 80 && typeof document !== 'undefined') {
+    return domPaginate(paragraphs, settings, containerHeight);
+  }
+
+  // Fallback when DOM not ready yet
+  return wordCountPaginate(paragraphs, settings, isMobile);
+}
+
+// ─── Parse HTML/text content into individual paragraph strings ──────────────
+
+function parseContent(content: string): string[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(content, 'text/html');
-  
-  // Extract all text-containing elements or text directly
-  const paragraphs: string[] = [];
-  
-  // If the epub/txt content is already structured as paragraphs
-  const pTags = doc.querySelectorAll('p, blockquote, li, h1, h2, h3, h4');
-  if (pTags.length > 0) {
-    pTags.forEach(p => {
-      const text = p.textContent?.trim();
-      if (text) {
-        // Tag format preservation
-        const tagName = p.tagName.toLowerCase();
-        if (tagName.startsWith('h')) {
-          paragraphs.push(`__HEADER__:${tagName}:${text}`);
-        } else if (tagName === 'blockquote') {
-          paragraphs.push(`__QUOTE__:${text}`);
-        } else {
-          paragraphs.push(text);
-        }
+  const result: string[] = [];
+
+  const nodes = doc.querySelectorAll('p, blockquote, li, h1, h2, h3, h4');
+  if (nodes.length > 0) {
+    nodes.forEach(node => {
+      const text = node.textContent?.trim();
+      if (!text) return;
+      const tag = node.tagName.toLowerCase();
+      if (tag.startsWith('h')) {
+        result.push(`<h2>${text}</h2>`);
+      } else if (tag === 'blockquote') {
+        result.push(`<blockquote>${text}</blockquote>`);
+      } else {
+        result.push(`<p>${text}</p>`);
       }
     });
   } else {
-    // Treat as raw text, split by double newlines or single newlines
-    const rawText = doc.body ? doc.body.textContent || '' : content;
-    rawText.split(/\n\s*\n/).forEach(block => {
+    const raw = doc.body?.textContent || content;
+    raw.split(/\n\s*\n/).forEach(block => {
       const text = block.trim().replace(/\s+/g, ' ');
-      if (text) {
-        paragraphs.push(text);
-      }
+      if (text) result.push(`<p>${text}</p>`);
     });
   }
 
-  // If there are no paragraphs, show at least a blank placeholder
-  if (paragraphs.length === 0) {
-    return ['[Pagină goală]'];
-  }
+  return result;
+}
 
-  // 2. Determine word capacity per page dynamically
-  // Two-page spread has half the width per page, so fewer words per side
-  const baseWordsPerPage = isMobile ? 130 : (settings.twoPageSpread ? 200 : 220);
+// ─── DOM-based pagination: inserts paragraphs until overflow detected ────────
 
-  // Inverse exponential scale for font sizing (larger fonts -> fewer words per page)
-  const scale = Math.pow(18 / settings.fontSize, 1.3);
-  const wordsPerPageLimit = Math.max(60, Math.floor(baseWordsPerPage * scale));
+function domPaginate(
+  paragraphs: string[],
+  settings: StyleSettings,
+  containerHeight: number
+): string[] {
+  const probe = document.createElement('div');
+  probe.style.cssText = [
+    'position:fixed',
+    'top:-99999px',
+    'left:-99999px',
+    'width:500px',
+    `height:${containerHeight}px`,
+    'overflow:hidden',
+    `font-size:${settings.fontSize}px`,
+    `line-height:${settings.lineHeight}`,
+    'visibility:hidden',
+    'pointer-events:none',
+    'box-sizing:border-box',
+    'word-break:break-word',
+    'overflow-wrap:break-word',
+  ].join(';');
+  document.body.appendChild(probe);
 
   const pages: string[] = [];
-  let currentPageParagraphs: string[] = [];
-  let currentPageWordCount = 0;
+  let current: string[] = [];
 
-  // Process text block-by-block
-  for (let i = 0; i < paragraphs.length; i++) {
-    const block = paragraphs[i];
-    let isHeader = false;
-    let isQuote = false;
-    let cleanText = block;
+  for (const para of paragraphs) {
+    current.push(para);
+    probe.innerHTML = current.join('');
 
-    if (block.startsWith('__HEADER__:')) {
-      isHeader = true;
-      const parts = block.split(':');
-      cleanText = parts.slice(2).join(':');
-    } else if (block.startsWith('__QUOTE__:')) {
-      isQuote = true;
-      cleanText = block.substring(10);
-    }
-
-    const wordCount = cleanText.split(/\s+/).length;
-
-    // Check if adding this entire block exceeds the target word count
-    if (currentPageWordCount + wordCount <= wordsPerPageLimit + 30 || currentPageWordCount === 0) {
-      // Add text block to current page
-      currentPageParagraphs.push(formatParagraph(cleanText, isHeader, isQuote));
-      currentPageWordCount += wordCount;
-    } else {
-      // If the block is very long (e.g. massive single paragraph), split it into sentences
-      if (wordCount > wordsPerPageLimit / 2) {
-        const sentences = splitIntoSentences(cleanText);
-        let subParagraphText = '';
-        let subWordCount = 0;
-
-        for (let s = 0; s < sentences.length; s++) {
-          const sentence = sentences[s];
-          const sentenceWordCount = sentence.split(/\s+/).length;
-
-          if (currentPageWordCount + subWordCount + sentenceWordCount > wordsPerPageLimit && currentPageWordCount > 0) {
-            // Commit remaining subParagraph as finished
-            if (subParagraphText) {
-              currentPageParagraphs.push(formatParagraph(subParagraphText, isHeader, isQuote));
-            }
-            // Push page
-            pages.push(assemblePageHTML(currentPageParagraphs));
-            // Reset page state
-            currentPageParagraphs = [];
-            currentPageWordCount = 0;
-            subParagraphText = '';
-            subWordCount = 0;
-          }
-
-          subParagraphText += (subParagraphText ? ' ' : '') + sentence;
-          subWordCount += sentenceWordCount;
-        }
-
-        if (subParagraphText) {
-          currentPageParagraphs.push(formatParagraph(subParagraphText, isHeader, isQuote));
-          currentPageWordCount += subWordCount;
-        }
+    if (probe.scrollHeight > containerHeight) {
+      if (current.length === 1) {
+        // Single paragraph already overflows — still add it as its own page
+        pages.push(current.join(''));
+        current = [];
       } else {
-        // Simple case: Push current page, start new page with the block
-        pages.push(assemblePageHTML(currentPageParagraphs));
-        currentPageParagraphs = [formatParagraph(cleanText, isHeader, isQuote)];
-        currentPageWordCount = wordCount;
+        // Last paragraph caused overflow — commit without it, restart with it
+        current.pop();
+        pages.push(current.join(''));
+        current = [para];
+
+        // Re-check: does this lone paragraph also overflow?
+        probe.innerHTML = para;
+        if (probe.scrollHeight > containerHeight) {
+          // Split into sentences and paginate those
+          const sentencePages = splitLongParagraph(para, probe, containerHeight);
+          const last = sentencePages.pop();
+          sentencePages.forEach(sp => pages.push(sp));
+          current = last ? [last] : [];
+        }
       }
     }
   }
 
-  // Add the last remaining page
-  if (currentPageParagraphs.length > 0) {
-    pages.push(assemblePageHTML(currentPageParagraphs));
-  }
-
-  return pages;
+  if (current.length > 0) pages.push(current.join(''));
+  document.body.removeChild(probe);
+  return pages.length > 0 ? pages : [emptyPage()];
 }
 
-/**
- * Format string as beautiful React-safe HTML tag
- */
-function formatParagraph(text: string, isHeader: boolean, isQuote: boolean): string {
-  if (isHeader) {
-    return `<h2>${text}</h2>`;
+// Splits a single overflowing paragraph by sentences until it fits
+function splitLongParagraph(
+  para: string,
+  probe: HTMLDivElement,
+  maxHeight: number
+): string[] {
+  const text = para.replace(/<[^>]+>/g, '');
+  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g) || [text];
+  const pages: string[] = [];
+  let current = '';
+
+  for (const sentence of sentences) {
+    const test = current + sentence;
+    probe.innerHTML = `<p>${test}</p>`;
+    if (probe.scrollHeight > maxHeight && current.length > 0) {
+      pages.push(`<p>${current.trim()}</p>`);
+      current = sentence;
+    } else {
+      current = test;
+    }
   }
-  if (isQuote) {
-    return `<blockquote>${text}</blockquote>`;
-  }
-  return `<p>${text}</p>`;
+
+  if (current.trim()) pages.push(`<p>${current.trim()}</p>`);
+  return pages.length > 0 ? pages : [`<p>${text}</p>`];
 }
 
-/**
- * Merges HTML string segments together perfectly
- */
-function assemblePageHTML(paragraphs: string[]): string {
-  return `<div class="story-page-content text-inherit select-none transition-all duration-300">${paragraphs.join('')}</div>`;
+// ─── Word-count fallback (used before DOM dimensions are known) ──────────────
+
+function wordCountPaginate(
+  paragraphs: string[],
+  settings: StyleSettings,
+  isMobile: boolean
+): string[] {
+  const base = isMobile ? 120 : (settings.twoPageSpread ? 190 : 210);
+  const fontScale = Math.pow(18 / settings.fontSize, 1.4);
+  const lineScale = 1.6 / settings.lineHeight;
+  const limit = Math.max(50, Math.floor(base * fontScale * lineScale));
+
+  const pages: string[] = [];
+  let current: string[] = [];
+  let wordCount = 0;
+
+  for (const para of paragraphs) {
+    const words = para.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+    if (wordCount + words > limit && current.length > 0) {
+      pages.push(current.join(''));
+      current = [para];
+      wordCount = words;
+    } else {
+      current.push(para);
+      wordCount += words;
+    }
+  }
+
+  if (current.length > 0) pages.push(current.join(''));
+  return pages.length > 0 ? pages : [emptyPage()];
 }
 
-/**
- * Splits standard paragraph by Romanian sentence boundaries.
- */
-function splitIntoSentences(text: string): string[] {
-  // Splitting pattern capturing common sentence endings: (.), (?), (!)
-  const regex = /[^.!?]+[.!?]+(\s|$)/g;
-  const matches = text.match(regex);
-  if (matches) {
-    return matches.map(m => m.trim());
-  }
-  return [text];
+function emptyPage(): string {
+  return '<p style="opacity:0.35;text-align:center;padding-top:35%;font-style:italic">Pagina goală</p>';
 }
