@@ -147,16 +147,16 @@ export default function App() {
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#8A8178]/3 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Main navigation header header block */}
-      <header id="main-navigation-header" className="relative z-10 border-b border-[#E3DDD3] bg-[#FBF9F6] px-6 py-4 flex items-center justify-between shadow-xs">
+      <header id="main-navigation-header" className="relative z-10 border-b border-[#E3DDD3] bg-[#FBF9F6] px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#5A5A40] rounded-xl flex items-center justify-center shadow-md">
             <Feather className="w-5.5 h-5.5 text-[#F5F2ED] stroke-[2]" />
           </div>
           <div className="cursor-pointer" onClick={() => { setActiveTab('library'); setSelectedBook(null); }}>
-            <h1 className="font-serif italic font-bold text-lg md:text-xl tracking-tight leading-tight text-[#2D2A26]">
+            <h1 className="font-serif italic font-bold text-base sm:text-lg md:text-xl tracking-tight leading-tight text-[#2D2A26]">
               Lectura Realistă
             </h1>
-            <p className="text-[10px] text-[#8A8178] uppercase tracking-widest font-mono">
+            <p className="hidden sm:block text-[10px] text-[#8A8178] uppercase tracking-widest font-mono">
               {t('library')} 3D & ePUB
             </p>
           </div>

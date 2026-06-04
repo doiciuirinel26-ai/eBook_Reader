@@ -607,15 +607,15 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
           <button
             id="menu-search-btn"
-            onClick={() => { 
-              setShowChapters(true); 
-              setShowSettings(false); 
+            onClick={() => {
+              setShowChapters(true);
+              setShowSettings(false);
               setSidebarTab('search');
               setTimeout(() => {
                 document.getElementById('sidebar-search-input')?.focus();
               }, 100);
             }}
-            className={`p-2 rounded-xl transition duration-200 flex items-center gap-1 text-sm ${
+            className={`hidden sm:flex p-2 rounded-xl transition duration-200 items-center gap-1 text-sm ${
               showChapters && sidebarTab === 'search' ? 'bg-[#5A5A40] text-[#F5F2ED] font-bold' : 'text-[#8A8178] hover:text-[#2D2A26] hover:bg-[#FAF8F5]'
             }`}
             title="Caută cuvinte cheie"
@@ -639,9 +639,9 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
       </header>
 
       {/* Primary 3D Virtual Book Lounge Area */}
-      <main 
+      <main
         id="reader-lounge"
-        className="relative flex-grow flex items-center justify-center p-4 md:p-8 overflow-hidden select-none"
+        className="relative flex-grow min-h-0 flex items-center justify-center p-2 sm:p-4 md:p-8 overflow-hidden select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -667,13 +667,20 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
         </button>
 
         {/* 3D Realistic Open Book Shell */}
-        <div 
+        <div
           id="interactive-3d-book"
-          className="relative w-full max-w-5xl aspect-[3/4.2] sm:aspect-[4/3] md:aspect-[1.45/1] rounded-2xl transition-all duration-500 book-cover-depth flex p-1 preserve-3d perspective-1500"
-          style={{ 
+          className="relative rounded-2xl transition-all duration-500 book-cover-depth flex p-1 preserve-3d perspective-1500"
+          style={settings.twoPageSpread ? {
             backgroundColor: book.coverColor,
-            maxWidth: settings.twoPageSpread ? '1120px' : '520px',
-            aspectRatio: settings.twoPageSpread ? '1.45/1' : '1/1.45'
+            width: '100%',
+            maxWidth: '1120px',
+            aspectRatio: '1.45/1',
+          } : {
+            backgroundColor: book.coverColor,
+            width: '100%',
+            maxWidth: '520px',
+            maxHeight: '100%',
+            aspectRatio: '1/1.45',
           }}
         >
           {/* Subtle Outer Bound Cover Border Decor */}
@@ -926,7 +933,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             /* ==================== SINGLE PORTRAIT POCKET-BOOK MOBILE VIEW ==================== */
             <div className="w-full h-full relative overflow-hidden rounded-xl cursor-pointer" onClick={handleNextPage}>
               <div
-                className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-between"
+                className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-between"
                 style={{ backgroundColor: colors.bg, color: colors.text }}
               >
                 {/* Mobile visual ribbon */}
