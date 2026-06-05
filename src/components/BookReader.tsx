@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Book, StyleSettings, PageData } from '../types';
+import { createPortal } from 'react-dom';
+import { Book, StyleSettings, PageData, Bookmark as BookmarkType } from '../types';
 import { paginateChapterContent } from '../utils/pagination';
 import { playPageTurnSound } from '../utils/audio';
 import { updateBookProgress, updateBookBookmarks, saveBookToDB } from '../utils/db';
@@ -23,7 +24,7 @@ import {
 } from 'lucide-react';
 
 interface BookmarksListProps {
-  bookmarks: import('../types').Bookmark[];
+  bookmarks: BookmarkType[];
   currentChapterIndex: number;
   currentPageIndex: number;
   onNavigate: (chapterIndex: number, pageIndex: number) => void;
@@ -1115,10 +1116,10 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
       </footer>
 
       {/* ==================== PANEL ADJUST DECOR STYLES ==================== */}
-      {showSettings && (
+      {showSettings && createPortal(
         <div
           id="adjust-settings-flyout"
-          className="fixed top-14 md:top-16 right-0 md:right-4 z-50 w-full md:w-80 max-h-[80vh] overflow-y-auto bg-white border-t md:border border-[#E3DDD3] md:rounded-2xl p-4 md:p-5 shadow-xl animate-scale-up text-[#4A443F]"
+          className="fixed top-14 md:top-16 right-0 md:right-4 z-[9999] w-full md:w-80 max-h-[80vh] overflow-y-auto bg-white border-t md:border border-[#E3DDD3] md:rounded-2xl p-4 md:p-5 shadow-xl animate-scale-up text-[#4A443F]"
         >
           <div className="flex items-center justify-between border-b border-[#E3DDD3] pb-3 mb-4">
             <h4 className="font-serif italic font-bold text-[#2D2A26] flex items-center gap-1.5 text-sm">
@@ -1306,14 +1307,15 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             )}
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ==================== SIDEBAR TABLE OF CONTENTS & BOOKMARKS ==================== */}
-      {showChapters && (
-        <div 
+      {showChapters && createPortal(
+        <div
           id="chapters-modal-overlay"
-          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-[2px] flex justify-start animate-fade-in"
+          className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-[2px] flex justify-start animate-fade-in"
           onClick={() => setShowChapters(false)}
         >
           <div
@@ -1526,7 +1528,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
               <span className="text-[#5A5A40] font-bold">{t('appName')}</span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Embedded CSS animations for high fidelity flipping */}
@@ -1584,14 +1587,14 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
       `}</style>
 
       {/* Immersive AI Translation Loading Overlay */}
-      {isTranslating && (
-        <div id="translation-loader-overlay" className="fixed inset-0 bg-black/45 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-fade-in text-[#F5F2ED] pointer-events-auto">
+      {isTranslating && createPortal(
+        <div id="translation-loader-overlay" className="fixed inset-0 bg-black/45 backdrop-blur-md z-[9999] flex items-center justify-center p-6 animate-fade-in text-[#F5F2ED] pointer-events-auto">
           <div className="bg-[#FAF8F5] border border-[#D8D2C6] rounded-3xl p-8 max-w-sm w-full text-center space-y-5 text-[#4A443F] shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 animate-pulse" />
             <div className="w-16 h-16 rounded-full bg-[#5A5A40]/10 flex items-center justify-center text-[#5A5A40] mx-auto animate-bounce">
               <Sparkles className="w-8 h-8 animate-spin" />
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-serif italic font-bold text-lg text-[#2D2A26]">{t('translatingText')}</h4>
               <p className="text-xs text-[#8A8178] leading-relaxed">
@@ -1603,7 +1606,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
               <span>POWERED BY GEMINI 3.5 FLASH</span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
