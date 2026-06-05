@@ -7,7 +7,6 @@ import { AuthorStoreSuite } from './components/AuthorStoreSuite';
 import { AccountPage } from './components/AccountPage';
 import { useTranslation, LanguageCode } from './utils/localization';
 import { 
-  Upload, 
   Sparkles, 
   Library, 
   Compass, 
@@ -241,15 +240,6 @@ export default function App() {
           >
             <HelpCircle className="w-5 h-5 text-[#5A5A40]" />
           </button>
-          
-          <button
-            id="header-import-trigger"
-            onClick={() => setShowUpload(true)}
-            className="px-4 py-2 bg-[#5A5A40] hover:bg-[#484833] active:scale-95 text-[#F5F2ED] font-serif italic text-xs rounded-full transition-all duration-200 shadow-sm flex items-center gap-1.5 cursor-pointer"
-          >
-            <Upload className="w-4 h-4 stroke-[2.5]" />
-            <span className="hidden sm:inline">{t('importBook')}</span>
-          </button>
         </div>
       </header>
 
@@ -350,12 +340,12 @@ export default function App() {
               
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <button
-                  id="hero-upload-shortcut"
-                  onClick={() => setShowUpload(true)}
+                  id="hero-go-to-account-shortcut"
+                  onClick={() => setActiveTab('account')}
                   className="px-5 py-3 bg-[#5A5A40] hover:bg-[#484833] active:scale-95 text-[#F5F2ED] text-xs font-mono font-medium rounded-full transition duration-200 shadow flex items-center gap-2 cursor-pointer"
                 >
-                  <Upload className="w-4 h-4 text-[#FBF9F6]" />
-                  {t('importFirst')}
+                  <User className="w-4 h-4 text-[#FBF9F6]" />
+                  {t('homeGoToAccount')}
                 </button>
                 <div className="text-xs text-[#8A8178] flex items-center gap-1">
                   <Compass className="w-4 h-4 text-[#5A5A40]" />

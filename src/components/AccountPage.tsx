@@ -17,6 +17,7 @@ import {
   Trash2,
   Info,
   TrendingUp,
+  Upload,
 } from 'lucide-react';
 
 interface AccountPageProps {
@@ -203,7 +204,15 @@ export function AccountPage({
           </div>
         </div>
 
-        <div className="md:col-span-12 flex justify-end">
+        <div className="md:col-span-12 flex flex-wrap justify-end items-center gap-2">
+          <button
+            id="account-import-trigger"
+            onClick={onImportClick}
+            className="px-4 py-2 bg-[#5A5A40] hover:bg-[#484833] text-[#F5F2ED] font-serif italic text-xs rounded-full transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <Upload className="w-4 h-4" />
+            {t('importBook')}
+          </button>
           <button
             onClick={handleLogout}
             className="px-4 py-2 bg-[#FAF8F5] hover:bg-red-50 text-[#8A8178] hover:text-red-700 border border-[#E3DDD3] hover:border-red-100 rounded-xl text-xs font-mono transition flex items-center gap-2"
