@@ -33,6 +33,14 @@ export interface Book {
 
 export type ReaderTheme = 'parchment' | 'warm-paper' | 'slate-dark' | 'midnight-velvet' | 'classic-white';
 
+export interface ReaderAccount {
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  joinedDate: string;
+}
+
 export interface AuthorProfile {
   id: string;
   name: string;
