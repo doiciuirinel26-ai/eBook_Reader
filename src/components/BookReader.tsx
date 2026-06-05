@@ -150,9 +150,13 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
     return () => ro.disconnect();
   }, []);
 
-  // Custom 3D Animation states
+  // Custom 3D Animation states (desktop two-page spread)
   const [isTurning, setIsTurning] = useState<boolean>(false);
   const [turnDirection, setTurnDirection] = useState<'next' | 'prev' | null>(null);
+
+  // Mobile slide animation state
+  const [mobilePageKey, setMobilePageKey] = useState(0);
+  const [mobileAnimDir, setMobileAnimDir] = useState<'next' | 'prev'>('next');
   
   // We keep track of the text we're flipping so that the visual transition shows exactly what was on the page
   const [oldPageLeftContent, setOldPageLeftContent] = useState<string>('');
@@ -354,93 +358,106 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
   const handleNextPage = () => {
     if (isTurning) return;
 
-    // Dual spread pagination skips 2 pages at once
     const step = settings.twoPageSpread ? 2 : 1;
     const nextPageIndex = currentPageIndex + step;
 
-    // Trigger audio rustle
     if (soundEnabled) playPageTurnSound();
 
+    if (!settings.twoPageSpread) {
+      // ── Mobile: instant change + CSS slide-in animation ──
+      setMobileAnimDir('next');
+      setMobilePageKey(k => k + 1);
+      if (nextPageIndex < paginatedPages.length) {
+        setCurrentPageIndex(nextPageIndex);
+      } else if (currentChapterIndex + 1 < book.chapters.length) {
+        setCurrentChapterIndex(prev => prev + 1);
+        setCurrentPageIndex(0);
+      }
+      return;
+    }
+
+    // ── Desktop: 3D flip animation ──
     if (nextPageIndex < paginatedPages.length) {
-      // Configure 3D Flip overlay content
       setOldPageLeftContent(paginatedPages[currentPageIndex] || '');
       setOldPageRightContent(paginatedPages[currentPageIndex + 1] || '');
-      setTurningPageFrontContent(paginatedPages[currentPageIndex + (settings.twoPageSpread ? 1 : 0)] || '');
+      setTurningPageFrontContent(paginatedPages[currentPageIndex + 1] || '');
       setTurningPageBackContent(paginatedPages[nextPageIndex] || '');
 
       setTurnDirection('next');
       setIsTurning(true);
-
       setTimeout(() => {
         setCurrentPageIndex(nextPageIndex);
         setIsTurning(false);
         setTurnDirection(null);
-      }, 700); // matching 3D flip animation delay duration
-    } else {
-      // Try to jump to next chapter if exists
-      if (currentChapterIndex + 1 < book.chapters.length) {
-        setTurnDirection('next');
-        setIsTurning(true);
-        if (soundEnabled) playPageTurnSound();
-
-        setTimeout(() => {
-          setCurrentChapterIndex(prev => prev + 1);
-          setCurrentPageIndex(0);
-          setIsTurning(false);
-          setTurnDirection(null);
-        }, 700);
-      }
+      }, 700);
+    } else if (currentChapterIndex + 1 < book.chapters.length) {
+      setTurnDirection('next');
+      setIsTurning(true);
+      if (soundEnabled) playPageTurnSound();
+      setTimeout(() => {
+        setCurrentChapterIndex(prev => prev + 1);
+        setCurrentPageIndex(0);
+        setIsTurning(false);
+        setTurnDirection(null);
+      }, 700);
     }
   };
 
   const handlePrevPage = () => {
     if (isTurning || (currentPageIndex === 0 && currentChapterIndex === 0)) return;
 
-    // Dual spread skips 2 pages
     const step = settings.twoPageSpread ? 2 : 1;
     const prevPageIndex = currentPageIndex - step;
 
     if (soundEnabled) playPageTurnSound();
 
+    if (!settings.twoPageSpread) {
+      // ── Mobile: instant change + CSS slide-in animation ──
+      setMobileAnimDir('prev');
+      setMobilePageKey(k => k + 1);
+      if (prevPageIndex >= 0) {
+        setCurrentPageIndex(prevPageIndex);
+      } else if (currentChapterIndex > 0) {
+        const prevChIndex = currentChapterIndex - 1;
+        const prevChContent = book.chapters[prevChIndex].content;
+        const tempPages = paginateChapterContent(prevChContent, settings, isMobile);
+        const targetIndex = tempPages.length - 1;
+        setCurrentChapterIndex(prevChIndex);
+        setCurrentPageIndex(targetIndex);
+      }
+      return;
+    }
+
+    // ── Desktop: 3D flip animation ──
     if (prevPageIndex >= 0) {
-      // 3D Flip animation
       setOldPageLeftContent(paginatedPages[currentPageIndex] || '');
       setOldPageRightContent(paginatedPages[currentPageIndex + 1] || '');
-      setTurningPageFrontContent(paginatedPages[prevPageIndex + (settings.twoPageSpread ? 1 : 0)] || '');
+      setTurningPageFrontContent(paginatedPages[prevPageIndex + 1] || '');
       setTurningPageBackContent(paginatedPages[currentPageIndex] || '');
 
       setTurnDirection('prev');
       setIsTurning(true);
-
       setTimeout(() => {
         setCurrentPageIndex(prevPageIndex);
         setIsTurning(false);
         setTurnDirection(null);
       }, 700);
-    } else {
-      // Try to leap back to previous chapter's last page
-      if (currentChapterIndex > 0) {
-        const prevChIndex = currentChapterIndex - 1;
-        const prevChContent = book.chapters[prevChIndex].content;
-        const tempPages = paginateChapterContent(prevChContent, settings, isMobile);
-        
-        // Target last page index
-        // In double spread, last index needs to be even
-        let targetIndex = tempPages.length - 1;
-        if (settings.twoPageSpread && targetIndex % 2 !== 0) {
-          targetIndex = Math.max(0, targetIndex - 1);
-        }
-
-        setTurnDirection('prev');
-        setIsTurning(true);
-
-        setTimeout(() => {
-          setCurrentChapterIndex(prevChIndex);
-          setCurrentPageIndex(targetIndex);
-          setIsTurning(false);
-          setTurnDirection(null);
-        }, 700);
+    } else if (currentChapterIndex > 0) {
+      const prevChIndex = currentChapterIndex - 1;
+      const prevChContent = book.chapters[prevChIndex].content;
+      const tempPages = paginateChapterContent(prevChContent, settings, isMobile);
+      let targetIndex = tempPages.length - 1;
+      if (settings.twoPageSpread && targetIndex % 2 !== 0) {
+        targetIndex = Math.max(0, targetIndex - 1);
       }
+      setTurnDirection('prev');
+      setIsTurning(true);
+      setTimeout(() => {
+        setCurrentChapterIndex(prevChIndex);
+        setCurrentPageIndex(targetIndex);
+        setIsTurning(false);
+        setTurnDirection(null);
+      }, 700);
     }
   };
 
@@ -747,7 +764,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             backgroundColor: book.coverColor,
             width: '100%',
             maxWidth: '520px',
-            height: `calc((100dvh - 112px) * ${settings.mobileBookHeight / 100})`,
+            height: `calc((100dvh - 56px) * ${settings.mobileBookHeight / 100})`,
           } : {
             backgroundColor: book.coverColor,
             width: '100%',
@@ -1006,7 +1023,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             /* ==================== SINGLE PORTRAIT POCKET-BOOK MOBILE VIEW ==================== */
             <div className="w-full h-full relative overflow-hidden rounded-xl cursor-pointer" onClick={handleNextPage}>
               <div
-                className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-between"
+                key={mobilePageKey}
+                className={`absolute inset-0 p-4 sm:p-8 flex flex-col justify-between ${mobileAnimDir === 'next' ? 'mobile-page-next' : 'mobile-page-prev'}`}
                 style={{ backgroundColor: colors.bg, color: colors.text }}
               >
                 {/* Mobile visual ribbon */}
@@ -1077,7 +1095,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
       {/* Chapter navigation footer progress slider */}
       <footer
         id="reader-footer"
-        className="relative z-10 h-14 bg-[#FBF9F6] border-t border-[#E3DDD3] flex items-center justify-between px-3 md:px-6 shadow-sm"
+        className="relative z-10 h-14 bg-[#FBF9F6] border-t border-[#E3DDD3] hidden sm:flex items-center justify-between px-3 md:px-6 shadow-sm"
       >
         <button
           id="nav-btn-prev"
@@ -1560,6 +1578,18 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
 
       {/* Embedded CSS animations for high fidelity flipping */}
       <style>{`
+        /* Mobile page slide animations */
+        @keyframes mobile-slide-from-right {
+          0%   { transform: translateX(100%); opacity: 0.6; }
+          100% { transform: translateX(0);    opacity: 1; }
+        }
+        @keyframes mobile-slide-from-left {
+          0%   { transform: translateX(-100%); opacity: 0.6; }
+          100% { transform: translateX(0);     opacity: 1; }
+        }
+        .mobile-page-next { animation: mobile-slide-from-right 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+        .mobile-page-prev { animation: mobile-slide-from-left  260ms cubic-bezier(0.16, 1, 0.3, 1); }
+
         @keyframes flip-next {
           0% {
             transform: rotateY(0deg);
