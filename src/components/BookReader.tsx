@@ -111,7 +111,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
     fontSize: 18,
     lineHeight: 1.6,
     theme: 'parchment',
-    twoPageSpread: window.innerWidth >= 768
+    twoPageSpread: window.innerWidth >= 768,
+    mobileBookHeight: 95,
   });
 
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -746,8 +747,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             backgroundColor: book.coverColor,
             width: '100%',
             maxWidth: '520px',
-            alignSelf: 'stretch',
-            minHeight: 0,
+            height: `calc((100dvh - 112px) * ${settings.mobileBookHeight / 100})`,
           } : {
             backgroundColor: book.coverColor,
             width: '100%',
@@ -1288,6 +1288,32 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
                 </div>
               </div>
             </div>
+
+            {/* Mobile page height slider — only relevant on mobile */}
+            {isMobile && (
+              <div className="pt-2 border-t border-[#E3DDD3]">
+                <label className="block text-[11px] font-mono text-[#8A8178] mb-2 uppercase tracking-wider">{t('mobileHeightLabel')}</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min={60}
+                    max={100}
+                    step={5}
+                    value={settings.mobileBookHeight}
+                    onChange={(e) => setSettings(prev => ({ ...prev, mobileBookHeight: Number(e.target.value) }))}
+                    className="flex-1 h-1.5 bg-[#E3DDD3] rounded-lg appearance-none cursor-pointer accent-[#5A5A40]"
+                  />
+                  <span className="font-mono text-xs font-bold text-[#2D2A26] w-10 text-right tabular-nums">
+                    {settings.mobileBookHeight}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-[9px] font-mono text-[#A69E93] mt-1 px-0.5">
+                  <span>60%</span>
+                  <span>80%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            )}
 
             {/* Pagination manual spread toggle (visible only on tablet) */}
             {!isMobile && (

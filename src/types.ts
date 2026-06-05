@@ -75,6 +75,7 @@ export interface StyleSettings {
   lineHeight: number; // 1.4 to 2.0
   theme: ReaderTheme;
   twoPageSpread: boolean; // True for side-by-side tablet layout, false for single mobile layout
+  mobileBookHeight: number; // 60–100 percent of available height between header and footer (mobile only)
 }
 
 export interface PageData {
