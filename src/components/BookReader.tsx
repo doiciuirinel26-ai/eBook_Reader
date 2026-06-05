@@ -708,7 +708,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
       {/* Primary 3D Virtual Book Lounge Area */}
       <main
         id="reader-lounge"
-        className="relative flex-grow min-h-0 flex items-center justify-center p-2 sm:p-4 md:p-8 overflow-hidden select-none"
+        className="relative flex-grow min-h-0 flex items-center justify-center sm:p-4 md:p-8 overflow-hidden select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -746,8 +746,8 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
             backgroundColor: book.coverColor,
             width: '100%',
             maxWidth: '520px',
-            height: 'calc(100dvh - 130px)',
-            maxHeight: '100%',
+            alignSelf: 'stretch',
+            minHeight: 0,
           } : {
             backgroundColor: book.coverColor,
             width: '100%',
