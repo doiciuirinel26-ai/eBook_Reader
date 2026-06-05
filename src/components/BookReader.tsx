@@ -1590,21 +1590,26 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
         .mobile-page-next { animation: mobile-slide-from-right 260ms cubic-bezier(0.16, 1, 0.3, 1); }
         .mobile-page-prev { animation: mobile-slide-from-left  260ms cubic-bezier(0.16, 1, 0.3, 1); }
 
+        /*
+         * Realistic page curl:
+         *  - perspective() inside the transform (not on parent) creates strong
+         *    foreshortening — the leading edge looks big, the far edge tiny.
+         *  - skewY at midpoint bends the page, simulating a curved paper surface.
+         *  - scaleX(1.03) at 90° adds the slight "inflation" visible on real paper.
+         */
         @keyframes flip-next {
-          0% {
-            transform: rotateY(0deg);
-          }
-          100% {
-            transform: rotateY(-180deg);
-          }
+          0%   { transform: perspective(1400px) rotateY(0deg); }
+          15%  { transform: perspective(1400px) rotateY(-22deg) skewY(-3deg); }
+          50%  { transform: perspective(1400px) rotateY(-90deg) skewY(-13deg) scaleX(1.03); }
+          85%  { transform: perspective(1400px) rotateY(-158deg) skewY(-3deg); }
+          100% { transform: perspective(1400px) rotateY(-180deg); }
         }
         @keyframes flip-prev {
-          0% {
-            transform: rotateY(-180deg);
-          }
-          100% {
-            transform: rotateY(0deg);
-          }
+          0%   { transform: perspective(1400px) rotateY(-180deg); }
+          15%  { transform: perspective(1400px) rotateY(-158deg) skewY(3deg); }
+          50%  { transform: perspective(1400px) rotateY(-90deg) skewY(13deg) scaleX(1.03); }
+          85%  { transform: perspective(1400px) rotateY(-22deg) skewY(3deg); }
+          100% { transform: perspective(1400px) rotateY(0deg); }
         }
         .animate-flip-next {
           transform-style: preserve-3d;
@@ -1618,7 +1623,72 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
           transform-origin: right;
           animation-name: flip-prev;
         }
-        /* Page flip scaling hover cue */
+
+        /*
+         * Crease / fold-line gradient that rides across the turning page.
+         * Starts as a thin bright strip at the right edge, sweeps to center at
+         * 50° (where the paper is edge-on), then sweeps to the left edge.
+         */
+        @keyframes crease-sweep-next {
+          0%   { background: linear-gradient(to left, rgba(0,0,0,0) 85%, rgba(0,0,0,0.55) 93%, rgba(0,0,0,0.15) 100%); }
+          35%  { background: linear-gradient(to left,  rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.55) 48%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0) 100%); }
+          65%  { background: linear-gradient(to right, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.45) 48%, rgba(0,0,0,0.10) 62%, rgba(0,0,0,0) 100%); }
+          100% { background: linear-gradient(to right, rgba(0,0,0,0) 85%, rgba(0,0,0,0.35) 93%, rgba(0,0,0,0.05) 100%); }
+        }
+        .crease-overlay-next {
+          animation: crease-sweep-next 700ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes crease-sweep-prev {
+          0%   { background: linear-gradient(to right, rgba(0,0,0,0) 85%, rgba(0,0,0,0.55) 93%, rgba(0,0,0,0.15) 100%); }
+          35%  { background: linear-gradient(to right, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.55) 48%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0) 100%); }
+          65%  { background: linear-gradient(to left,  rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.45) 48%, rgba(0,0,0,0.10) 62%, rgba(0,0,0,0) 100%); }
+          100% { background: linear-gradient(to left,  rgba(0,0,0,0) 85%, rgba(0,0,0,0.35) 93%, rgba(0,0,0,0.05) 100%); }
+        }
+        .crease-overlay-prev {
+          animation: crease-sweep-prev 700ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* Shadow the turning leaf casts on the pages beneath it */
+        @keyframes shadow-cast-nl {
+          0%   { background: transparent; }
+          30%  { background: linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.36) 45%, rgba(0,0,0,0.07) 70%, transparent 100%); }
+          75%  { background: linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 30%, transparent 55%); }
+          100% { background: transparent; }
+        }
+        .shadow-cast-next-left {
+          animation: shadow-cast-nl 700ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes shadow-cast-nr {
+          0%   { background: linear-gradient(to right, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.14) 40%, transparent 65%); }
+          65%  { background: linear-gradient(to right, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.04) 30%, transparent 50%); }
+          100% { background: transparent; }
+        }
+        .shadow-cast-next-right {
+          animation: shadow-cast-nr 700ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes shadow-cast-pl {
+          0%   { background: linear-gradient(to left, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.14) 40%, transparent 65%); }
+          65%  { background: linear-gradient(to left, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.04) 30%, transparent 50%); }
+          100% { background: transparent; }
+        }
+        .shadow-cast-prev-left {
+          animation: shadow-cast-pl 700ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes shadow-cast-pr {
+          0%   { background: transparent; }
+          30%  { background: linear-gradient(to left, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.36) 45%, rgba(0,0,0,0.07) 70%, transparent 100%); }
+          75%  { background: linear-gradient(to left, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 30%, transparent 55%); }
+          100% { background: transparent; }
+        }
+        .shadow-cast-prev-right {
+          animation: shadow-cast-pr 700ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* UI panel animations */
         @keyframes scale-up {
           0% { transform: scale(0.95); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
