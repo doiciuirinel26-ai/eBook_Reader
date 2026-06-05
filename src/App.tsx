@@ -154,10 +154,10 @@ export default function App() {
           </div>
           <div className="cursor-pointer" onClick={() => { setActiveTab('library'); setSelectedBook(null); }}>
             <h1 className="font-serif italic font-bold text-base sm:text-lg md:text-xl tracking-tight leading-tight text-[#2D2A26]">
-              Lectura Realistă
+              {t('appBrandName')}
             </h1>
             <p className="hidden sm:block text-[10px] text-[#8A8178] uppercase tracking-widest font-mono">
-              {t('library')} 3D & ePUB
+              {t('appTagline')}
             </p>
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function App() {
             <button
               onClick={() => setShowLangDropdown(!showLangDropdown)}
               className="px-3 py-1.5 bg-[#FAF8F5] border border-[#E3DDD3] hover:border-[#5A5A40] rounded-full text-xs font-mono font-medium flex items-center gap-1.5 hover:bg-[#E3DDD3]/20 active:scale-95 transition-all duration-150 cursor-pointer"
-              title="Alege limba / Select language"
+              title={t('selectLanguage')}
             >
               <span>{languages.find(l => l.code === currentLanguage)?.flag}</span>
               <span className="hidden sm:inline text-xs text-[#4A443F]">{languages.find(l => l.code === currentLanguage)?.label}</span>
@@ -324,7 +324,7 @@ export default function App() {
             <div className="lg:col-span-8 space-y-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#5A5A40]/10 text-[#5A5A40] font-mono text-[10px] uppercase font-bold rounded-full tracking-wider border border-[#5A5A40]/20">
                 <Sparkles className="w-3.5 h-3.5" />
-                Interfață pură • Pure UI
+                {t('pureUIBadge')}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif italic font-bold tracking-tight text-[#2D2A26] leading-tight">
                 {t('welcomeTitle')} <span className="underline decoration-[#C2BCAE]">{t('welcomeTitleAccent')}</span>
@@ -366,7 +366,7 @@ export default function App() {
               <div className="bg-white border border-[#E3DDD3] rounded-2xl p-4 text-center space-y-1 shadow-xs">
                 <BookCheck className="w-5 h-5 text-[#5A5A40] mx-auto" />
                 <p className="text-xl font-serif font-bold text-[#2D2A26]">{customBooksCount}</p>
-                <p className="text-[9px] text-[#8A8178] font-mono uppercase">CUSTOM EPUB</p>
+                <p className="text-[9px] text-[#8A8178] font-mono uppercase">{t('customEpub')}</p>
               </div>
 
               <div className="bg-white border border-[#E3DDD3] rounded-2xl p-4 text-center space-y-1 shadow-xs">
@@ -444,7 +444,7 @@ export default function App() {
                           <h4 className="font-semibold text-xs text-[#2D2A26] line-clamp-1 group-hover:text-[#5A5A40] transition duration-150">
                             {bm.bookTitle}
                           </h4>
-                          <p className="text-[10px] text-[#8A8178] truncate">de {bm.author}</p>
+                          <p className="text-[10px] text-[#8A8178] truncate">{t('authorPrefix')} {bm.author}</p>
                         </div>
                       </div>
 
@@ -456,7 +456,7 @@ export default function App() {
 
                     <div className="flex items-center justify-between border-t border-[#E3DDD3]/50 pt-2 mt-2">
                       <span className="text-[9px] font-mono font-bold text-[#5A5A40] bg-[#5A5A40]/10 px-2 py-0.5 rounded border border-[#5A5A40]/15">
-                        CAP. {bm.chapterIndex + 1} • PAG. {bm.pageIndex + 1}
+                        {t('chShort')} {bm.chapterIndex + 1} • {t('pageShort')} {bm.pageIndex + 1}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <span className="text-[8px] font-mono text-[#8A8178]/70">
@@ -466,7 +466,7 @@ export default function App() {
                           id={`dash-bookmark-delete-${bm.id}`}
                           onClick={(e) => handleBookmarkDelete(e, bm.bookId, bm.id)}
                           className="p-1 rounded-md text-[#8A8178] hover:text-red-600 hover:bg-red-50/70 border border-transparent hover:border-red-100 transition duration-150 flex items-center justify-center cursor-pointer"
-                          title="Șterge marcaj"
+                          title={t('deleteBookmark')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -496,7 +496,7 @@ export default function App() {
             {loading ? (
               <div className="py-24 text-center space-y-3">
                 <div className="w-10 h-10 border-2 border-[#5A5A40] border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-xs text-[#8A8178] font-mono">Se încarcă rafturile bibliotecii locale...</p>
+                <p className="text-xs text-[#8A8178] font-mono">{t('loadingLibrary')}</p>
               </div>
             ) : books.length === 0 ? (
               <div className="border border-dashed border-[#D8D2C6] bg-[#FAF8F5] rounded-3xl p-16 text-center space-y-4 max-w-lg mx-auto shadow-xs">
@@ -505,7 +505,7 @@ export default function App() {
                 </div>
                 <h4 className="font-serif italic font-bold text-[#2D2A26] text-lg">{t('noBooks')}</h4>
                 <p className="text-xs text-[#8A8178] leading-relaxed font-light">
-                  Vă rugăm să importați prima voastră carte în format digital EPUB/TXT sau apăsați butonul de mai jos pentru a genera colecția demonstrativă de literatură clasică.
+                  {t('emptyShelfHint')}
                 </p>
                 <button
                   id="empty-shelf-upload-btn"

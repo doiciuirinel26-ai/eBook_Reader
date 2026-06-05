@@ -3,6 +3,7 @@ import { Upload, BookOpen, AlertCircle, FileText, CheckCircle2, ChevronRight, Fi
 import { parseEpubFile, parseTxtFile } from '../utils/epubParser';
 import { parsePdfFile } from '../utils/pdfParser';
 import { Book } from '../types';
+import { useTranslation } from '../utils/localization';
 
 interface UploadPanelProps {
   onImportSuccess: (book: Book) => void;
@@ -10,20 +11,19 @@ interface UploadPanelProps {
 }
 
 export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClose }) => {
+  const { t } = useTranslation();
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [importMode, setImportMode] = useState<'file' | 'paste'>('file');
 
-  // Custom text paste state
   const [pasteTitle, setPasteTitle] = useState<string>('');
   const [pasteAuthor, setPasteAuthor] = useState<string>('');
   const [pasteContent, setPasteContent] = useState<string>('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Drag and drop handlers
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -56,7 +56,6 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
     fileInputRef.current?.click();
   };
 
-  // Parse either EPUB or TXT file
   const processSelectedFile = async (file: File) => {
     setLoading(true);
     setErrorMsg(null);
@@ -72,38 +71,37 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
         const text = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (event) => resolve(event.target?.result as string || '');
-          reader.onerror = () => reject(new Error('Eroare la citirea fișierului text.'));
+          reader.onerror = () => reject(new Error(t('errorReadTextFile')));
           reader.readAsText(file);
         });
         book = parseTxtFile(text, file.name);
       } else {
-        throw new Error('Format nesuportat. Introduceți doar fișiere .epub, .txt sau .pdf.');
+        throw new Error(t('errorUnsupportedFormat'));
       }
 
       onImportSuccess(book);
-      setSuccessMsg(`Cartea „${book.title}” a fost importată cu succes!`);
+      setSuccessMsg(`„${book.title}" ${t('bookImportedSuccess')}`);
       setTimeout(() => {
         onClose();
       }, 1500);
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(err.message || 'Ceva neprevăzut s-a întâmplat în timpul importului.');
+      setErrorMsg(err.message || t('errorImportUnexpected'));
     } finally {
       setLoading(false);
     }
   };
 
-  // Fast paste compiler
   const handlePasteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
     const title = pasteTitle.trim();
-    const author = pasteAuthor.trim() || 'Autor Necunoscut';
+    const author = pasteAuthor.trim() || t('unknownAuthor');
     const content = pasteContent.trim();
 
     if (!title || !content) {
-      setErrorMsg('Vă rugăm să completați Titlul și Conținutul cărții.');
+      setErrorMsg(t('errorFillTitleContent'));
       return;
     }
 
@@ -113,12 +111,12 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
       book.author = author;
       
       onImportSuccess(book);
-      setSuccessMsg(`Cartea „${book.title}” a fost creată din text cu succes!`);
+      setSuccessMsg(`„${book.title}" ${t('bookCreatedSuccess')}`);
       setTimeout(() => {
         onClose();
       }, 1500);
     } catch (err: any) {
-      setErrorMsg('Nu s-a putut procesa textul introdus.');
+      setErrorMsg(t('errorProcessPastedText'));
     } finally {
       setLoading(false);
     }
@@ -131,18 +129,16 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
         className="relative w-full max-w-2xl bg-white border border-[#E3DDD3] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] text-[#4A443F]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header decoration bar */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#5A5A40] via-[#8A8178] to-[#5A5A40]" />
 
-        {/* Modal Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#E3DDD3] flex items-center justify-between bg-[#FBF9F6]">
           <div>
             <h3 className="text-xl font-serif italic font-bold text-[#2D2A26] flex items-center gap-2">
               <Upload className="w-5.5 h-5.5 text-[#5A5A40]" />
-              Adaugă o carte în bibliotecă
+              {t('uploadPanelTitle')}
             </h3>
             <p className="text-xs text-[#8A8178] mt-1">
-              Importă eBook-urile tale preferate în format digital sau inserează fragmente de text.
+              {t('uploadPanelSubtitle')}
             </p>
           </div>
           <button 
@@ -150,11 +146,10 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
             onClick={onClose}
             className="p-1 px-3 text-sm text-[#8A8178] hover:text-[#2D2A26] hover:bg-[#FAF8F5] rounded-lg transition-all duration-200 border border-transparent hover:border-[#E3DDD3]"
           >
-            Închide
+            {t('closeReader')}
           </button>
         </div>
 
-        {/* Dynamic Mode Switcher Tabs */}
         <div className="flex border-b border-[#E3DDD3] font-mono text-xs text-[#8A8178] bg-[#FBF9F6]">
           <button
             id="tab-import-file"
@@ -164,7 +159,7 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
             onClick={() => { setImportMode('file'); setErrorMsg(null); }}
           >
             <FileCode className="w-4 h-4" />
-            FIȘIER (.EPUB / .TXT / .PDF)
+            {t('tabImportFile')}
           </button>
           
           <button
@@ -175,11 +170,10 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
             onClick={() => { setImportMode('paste'); setErrorMsg(null); }}
           >
             <Keyboard className="w-4 h-4" />
-            LIPEȘTE TEXT SCRIPT
+            {t('tabImportPaste')}
           </button>
         </div>
 
-        {/* Content area */}
         <div className="p-6 overflow-y-auto flex-grow bg-white">
           {errorMsg && (
             <div className="mb-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start gap-2.5 animate-pulse">
@@ -199,12 +193,11 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="w-12 h-12 border-4 border-[#5A5A40] border-t-transparent rounded-full animate-spin" />
               <p className="text-sm font-mono text-[#2D2A26]">
-                Se parsează capitolele și se creează paginile...
+                {t('parsingChapters')}
               </p>
-              <span className="text-[10px] text-[#8A8178] font-serif">Așteptare structurare 3D</span>
+              <span className="text-[10px] text-[#8A8178] font-serif">{t('waitStructuring3D')}</span>
             </div>
           ) : importMode === 'file' ? (
-            /* File Import Dropzone */
             <div 
               id="file-dropzone"
               onDragEnter={handleDrag}
@@ -231,64 +224,63 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
               </div>
 
               <h4 className="font-serif italic text-lg font-bold text-[#2D2A26]">
-                Trage fișierul sau apasă pentru a alege
+                {t('dragOrClickFile')}
               </h4>
               
               <div className="flex items-center gap-2 mt-2 text-[#8A8178] text-xs font-light">
                 <FileText className="w-4 h-4 text-[#5A5A40]" />
-                <span>EPUB standard, documente PDF sau fișiere text (.txt)</span>
+                <span>{t('supportedFormatsNote')}</span>
               </div>
 
               <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full p-4 bg-[#FAF8F5] border border-[#E3DDD3] rounded-xl text-left shadow-xs">
                 <div>
                   <h5 className="font-semibold text-[#2D2A26] text-xs flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-[#5A5A40] rounded-full" />
-                    Format EPUB
+                    {t('formatEpub')}
                   </h5>
                   <p className="text-[10px] text-[#8A8178] mt-1 leading-normal">
-                    Se importă structura nativă, capitolele, stilurile de bază și descrierile cărții.
+                    {t('formatEpubDesc')}
                   </p>
                 </div>
                 <div>
                   <h5 className="font-semibold text-[#2D2A26] text-xs flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-[#5A5A40]/75 rounded-full" />
-                    Document PDF
+                    {t('formatPdf')}
                   </h5>
                   <p className="text-[10px] text-[#8A8178] mt-1 leading-normal">
-                    Extrage fluent textul din pagini și le compilează automat în capitole optimizate.
+                    {t('formatPdfDesc')}
                   </p>
                 </div>
                 <div>
                   <h5 className="font-semibold text-[#2D2A26] text-xs flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-[#8A8178] rounded-full" />
-                    Format TXT
+                    {t('formatTxt')}
                   </h5>
                   <p className="text-[10px] text-[#8A8178] mt-1 leading-normal">
-                    Se detectează automat capitolele pe baza cuvântului „Capitolul” sau a spațierilor.
+                    {t('formatTxtDesc')}
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            /* Custom Rich Text Paste Form */
             <form id="paste-text-form" onSubmit={handlePasteSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-[#8A8178] mb-1.5">TITLUL CĂRȚII</label>
+                  <label className="block text-xs font-mono text-[#8A8178] mb-1.5">{t('bookTitleLabel')}</label>
                   <input
                     type="text"
                     required
-                    placeholder="ex: Poezii de dragoste"
+                    placeholder={t('bookTitlePlaceholder')}
                     value={pasteTitle}
                     onChange={(e) => setPasteTitle(e.target.value)}
                     className="w-full bg-[#FAF8F5] border border-[#E3DDD3] focus:border-[#5A5A40] focus:ring-1 focus:ring-[#5A5A40]/20 text-[#2D2A26] rounded-xl px-4 py-2.5 text-sm transition-all outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-[#8A8178] mb-1.5">AUTOR</label>
+                  <label className="block text-xs font-mono text-[#8A8178] mb-1.5">{t('authorName').toUpperCase()}</label>
                   <input
                     type="text"
-                    placeholder="ex: Mihai Eminescu (opțional)"
+                    placeholder={t('authorOptionalPlaceholder')}
                     value={pasteAuthor}
                     onChange={(e) => setPasteAuthor(e.target.value)}
                     className="w-full bg-[#FAF8F5] border border-[#E3DDD3] focus:border-[#5A5A40] focus:ring-1 focus:ring-[#5A5A40]/20 text-[#2D2A26] rounded-xl px-4 py-2.5 text-sm transition-all outline-none"
@@ -297,17 +289,17 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-[#8A8178] mb-1.5">CONȚINUT / TEXTUL CĂRȚII</label>
+                <label className="block text-xs font-mono text-[#8A8178] mb-1.5">{t('contentLabel')}</label>
                 <textarea
                   required
                   rows={8}
-                  placeholder={`Capitolul I. Introducere\nLipiți textul romanului sau poeziilor voastre aici...\n\nCapitolul II. Întâmplări bizare\nSistemul va crea în mod complet pagini separate automat!`}
+                  placeholder={t('pasteContentPlaceholder')}
                   value={pasteContent}
                   onChange={(e) => setPasteContent(e.target.value)}
                   className="w-full bg-[#FAF8F5] border border-[#E3DDD3] focus:border-[#5A5A40] focus:ring-1 focus:ring-[#5A5A40]/20 text-[#2D2A26] rounded-xl px-4 py-3 text-sm font-sans transition-all outline-none resize-none font-light leading-relaxed"
                 />
                 <p className="text-[10px] text-[#8A8178] mt-1 italic">
-                  Sfat: Structurați capitolele scriind „Capitolul I”, „Capitolul 1” etc. la începutul rândului pentru o segmentare optimă a meniului.
+                  {t('pasteChapterTip')}
                 </p>
               </div>
 
@@ -316,7 +308,7 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
                   type="submit"
                   className="px-6 py-2.5 bg-[#5A5A40] hover:bg-[#484833] active:scale-95 text-[#F5F2ED] font-serif italic text-sm rounded-full transition-all duration-200 flex items-center gap-1.5 shadow-sm"
                 >
-                  Creează cartea
+                  {t('createBookBtn')}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -324,10 +316,9 @@ export const UploadPanel: React.FC<UploadPanelProps> = ({ onImportSuccess, onClo
           )}
         </div>
 
-        {/* Footer info/cues */}
         <div className="p-4 bg-[#FBF9F6] border-t border-[#E3DDD3] text-center text-[10px] text-[#8A8178] font-mono flex items-center justify-center gap-1">
           <BookOpen className="w-3.5 h-3.5 text-[#5A5A40]" />
-          <span>Tot conținutul salvat rămâne stocat securizat în dispozitivul dumneavoastră.</span>
+          <span>{t('localStorageNote')}</span>
         </div>
       </div>
     </div>

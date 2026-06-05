@@ -18,6 +18,7 @@ import {
 } from '../types';
 import { parsePdfFile } from '../utils/pdfParser';
 import { parseTxtFile } from '../utils/epubParser';
+import { useTranslation } from '../utils/localization';
 import { 
   User, 
   PenTool, 
@@ -49,7 +50,7 @@ interface AuthorStoreSuiteProps {
 }
 
 export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibrary }: AuthorStoreSuiteProps) {
-  // Session State
+  const { t } = useTranslation();
   const [currentUser, setCurrentUser] = useState<AuthorProfile | null>(null);
   
   // Db lists
@@ -129,7 +130,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
     setAuthError(null);
 
     if (!authEmail || !authPassword) {
-      setAuthError('Vă rugăm să introduceți emailul și codul PIN/parola.');
+      setAuthError(t('errorEmailPassword'));
       return;
     }
 
@@ -138,13 +139,13 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
       
       if (isRegistering) {
         if (!authName || !authPenName) {
-          setAuthError('Vă rugăm să completați numele real și pseudonimul de autor.');
+          setAuthError(t('errorNamePenName'));
           return;
         }
 
         const emailExists = registeredList.some(u => u.email.toLowerCase() === authEmail.toLowerCase());
         if (emailExists) {
-          setAuthError('Acest email este deja înregistrat ca autor.');
+          setAuthError(t('errorEmailExists'));
           return;
         }
 
@@ -153,7 +154,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
           name: authName,
           email: authEmail,
           penName: authPenName,
-          bio: authBio || 'Scriitor pasionat de povestiri și romane.',
+          bio: authBio || t('defaultBio'),
           password: authPassword,
           joinedDate: new Date().toLocaleDateString('ro-RO')
         };
@@ -161,7 +162,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
         await saveAuthor(newProfile);
         localStorage.setItem('lectura_realista_author', JSON.stringify(newProfile));
         setCurrentUser(newProfile);
-        setCreatorMessage('Cont creat cu succes! Bine ați venit în Cabinetul de Creație.');
+        setCreatorMessage(t('accountCreatedWelcome'));
         loadStoreAndSession();
       } else {
         // Simple authentication check
@@ -172,19 +173,19 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
         if (match) {
           localStorage.setItem('lectura_realista_author', JSON.stringify(match));
           setCurrentUser(match);
-          setCreatorMessage(`Bine ați revenit, ${match.penName}!`);
+          setCreatorMessage(`${t('welcomeBackPrefix')}${match.penName}!`);
           loadStoreAndSession();
         } else {
           // If empty table, allow to create instantly or say invalid credentials
           if (registeredList.length === 0) {
-            setAuthError('Nu există niciun cont înregistrat local. Bifați opțiunea din subsol pentru a crea un cont nou!');
+            setAuthError(t('errorNoAccount'));
           } else {
-            setAuthError('Date de conectare incorecte. Reîncercați sau creați un cont nou.');
+            setAuthError(t('errorWrongCredentials'));
           }
         }
       }
     } catch (err) {
-      setAuthError('Eroare locală la interogarea bazei de date.');
+      setAuthError(t('errorDbQuery'));
     }
   };
 
@@ -198,8 +199,8 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
   const handleAddNewDraft = async () => {
     if (!currentUser) return;
 
-    const title = newDraftTitle.trim() || 'Fără titlu';
-    const desc = newDraftDesc.trim() || 'O lucrare românească splendidă.';
+    const title = newDraftTitle.trim() || t('untitledDraft');
+    const desc = newDraftDesc.trim() || t('defaultDraftDesc');
     
     const newDraft: AuthorDraft = {
       id: `draft-${Date.now()}`,
@@ -213,8 +214,8 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
       chapters: [
         {
           id: `draft-ch-${Date.now()}-1`,
-          title: 'I. Introducere / Primul Capitol',
-          content: '<p class="my-3 text-justify leading-relaxed indent-4">Scrieți aici primele voastre rânduri dintr-o operă de neuitat...</p>'
+          title: t('defaultChapterTitle'),
+          content: `<p class="my-3 text-justify leading-relaxed indent-4">${t('defaultChapterContent')}</p>`
         }
       ]
     };
@@ -223,7 +224,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
     setNewDraftTitle('');
     setNewDraftDesc('');
     await reloadDraftsList();
-    setCreatorMessage('A fost creat un nou proiect de carte! Începeți scrierea mai jos.');
+    setCreatorMessage(t('draftCreatedMsg'));
     // Start editing instantly
     handleStartEditDraft(newDraft);
   };
@@ -271,10 +272,10 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
       await saveDraft(updated);
       setEditingDraft(updated);
       await reloadDraftsList();
-      setCreatorMessage('Capitolul și modificările ciornei au fost salvate cu succes!');
+      setCreatorMessage(t('chapterSavedMsg'));
       setTimeout(() => setCreatorMessage(null), 3000);
     } catch (err) {
-      alert('Eroare la salvarea proiectului.');
+      alert(t('errorSaveDraft'));
     }
   };
 
@@ -294,8 +295,8 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
     const nextIndex = prevChapters.length;
     const newCh: Chapter = {
       id: `draft-ch-${Date.now()}-${nextIndex + 1}`,
-      title: `Capitolul ${nextIndex + 1}`,
-      content: '<p class="my-3 text-justify leading-relaxed indent-4">Scrieți conținutul capitolului aici...</p>'
+      title: `${t('chapterN')} ${nextIndex + 1}`,
+      content: `<p class="my-3 text-justify leading-relaxed indent-4">${t('writeChapterHere')}</p>`
     };
 
     const updated: AuthorDraft = {
@@ -311,11 +312,11 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
 
   const handleDeleteChapter = (indexToDelete: number) => {
     if (!editingDraft || editingDraft.chapters.length <= 1) {
-      alert('Cartea trebuie să aibă cel puțin un capitol.');
+      alert(t('minOneChapter'));
       return;
     }
 
-    if (confirm('Sigur doriți să ștergeți acest capitol? Această acțiune este ireversibilă.')) {
+    if (confirm(t('confirmDeleteChapter'))) {
       const updatedChapters = editingDraft.chapters.filter((_, idx) => idx !== indexToDelete);
       
       const updated: AuthorDraft = {
@@ -333,13 +334,13 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
 
   const handleDeleteDraft = async (draftId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Sigur doriți să ștergeți definitiv ciorna acestui volum? Progresul va fi șters local.')) {
+    if (confirm(t('confirmDeleteDraft'))) {
       await deleteDraftFromDB(draftId);
       if (editingDraft?.id === draftId) {
         setEditingDraft(null);
       }
       await reloadDraftsList();
-      setCreatorMessage('Ciorna de volum a fost ștearsă.');
+      setCreatorMessage(t('draftDeletedMsg'));
     }
   };
 
@@ -363,7 +364,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
         const text = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (event) => resolve(event.target?.result as string || '');
-          reader.onerror = () => reject(new Error('Eroare la citirea textului.'));
+          reader.onerror = () => reject(new Error(t('errorReadText')));
           reader.readAsText(file);
         });
         const parsedBook = parseTxtFile(text, file.name);
@@ -371,13 +372,13 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
           return `<h3 class="font-serif italic font-semibold text-lg text-[#2D2A26] mt-6 mb-2">${ch.title}</h3>\n${ch.content}`;
         }).join('\n\n');
       } else {
-        throw new Error('Suportăm doar PDF și TXT pentru importul rapid în capitol.');
+        throw new Error(t('pdfTxtOnlyImport'));
       }
 
       setChapterContentInput(prev => prev + '\n\n' + importedText);
-      setCreatorMessage(`Fișierul "${file.name}" a fost importat cu succes în editor! S-au adăugat paragrafele.`);
+      setCreatorMessage(`"${file.name}" ${t('fileImportedEditor')}`);
     } catch (err: any) {
-      setImportChapterError(err.message || 'Eroare la importul textului.');
+      setImportChapterError(err.message || t('errorImportText'));
     } finally {
       setIsImportingToChapter(false);
       // Reset input element
@@ -405,7 +406,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
     }));
 
     if (compiledChapters.some(ch => !ch.title.trim() || !ch.content.trim())) {
-      alert('Vă rugăm să vă asigurați că toate capitolele au titluri și un conținut scris înainte de publicare.');
+      alert(t('confirmPublishChapters'));
       return;
     }
 
@@ -427,11 +428,11 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
     try {
       await saveStoreBook(publishedBook);
       await reloadStoreList();
-      alert(`Minunat! Titlul "${editingDraft.title}" a fost publicat pe Store. Alți cititori îl pot acum descărca din secțiunea Librărie Store!`);
+      alert(`${t('publishSuccessPrefix')}${editingDraft.title}${t('publishSuccessSuffix')}`);
       setEditingDraft(null);
       onNavigateToLibrary(); // Go back to Library views where they can browse
     } catch (err) {
-      alert('Eroare la publicare.');
+      alert(t('errorPublish'));
     }
   };
 
@@ -442,7 +443,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
     // Check if user already liked it in session to prevent abuse
     const likedKey = `liked_${book.id}`;
     if (sessionStorage.getItem(likedKey)) {
-      alert('Ați apreciat deja acest volum.');
+      alert(t('alreadyLiked'));
       return;
     }
 
@@ -486,9 +487,9 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
 
       onBookImported(newBook);
       
-      alert(`Felicitări! Opera "${book.title}" de ${book.author} a fost descarcată și așezată pe raftul tău principal de lectură!`);
+      alert(`${t('downloadSuccessPrefix')}${book.title}${t('downloadSuccessMid')}${book.author}${t('downloadSuccessSuffix')}`);
     } catch (err) {
-      alert('Eroare la adăugarea volumului în bibliotecă.');
+      alert(t('errorAddToLibrary'));
     }
   };
 
@@ -523,7 +524,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             onClick={() => setCreatorMessage(null)}
             className="text-[10px] text-[#8A8178] hover:text-[#2D2A26] uppercase font-mono font-bold"
           >
-            Închide
+            {t('closeReader')}
           </button>
         </div>
       )}
@@ -540,13 +541,10 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
               <PenTool className="w-6 h-6" />
             </div>
             <h3 className="font-serif italic font-bold text-xl text-[#2D2A26]">
-              {isRegistering ? 'Înregistrare Autor Nou' : 'Cabinetul Autorului'}
+              {isRegistering ? t('registerAuthorTitle') : t('authorCabinetTitle')}
             </h3>
             <p className="text-xs text-[#8A8178] leading-relaxed font-light">
-              {isRegistering 
-                ? 'Înregistrează-ți pseudonimul unic și publică opere literare pe Store' 
-                : 'Conectează-te la contul tău de scriitor pentru a edita manuscrisele și proiectele'
-              }
+              {isRegistering ? t('registerAuthorDesc') : t('loginAuthorDesc')}
             </p>
           </div>
 
@@ -561,7 +559,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             {isRegistering && (
               <>
                 <div>
-                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Nume Real</label>
+                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('realNameLabel')}</label>
                   <input 
                     type="text" 
                     placeholder="Ion Creangă"
@@ -571,7 +569,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Pseudonim de Autor (Nume Public)</label>
+                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('penNamePublicLabel')}</label>
                   <input 
                     type="text" 
                     placeholder="CreaNove"
@@ -579,10 +577,10 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                     onChange={(e) => setAuthPenName(e.target.value)}
                     className="w-full text-xs p-3 border border-[#E3DDD3] bg-white rounded-xl focus:border-[#5A5A40] focus:ring-1 focus:ring-[#5A5A40] outline-none transition"
                   />
-                  <span className="text-[9px] text-[#8A8178]/80 mt-1 block">Acesta va fi tipărit pe coperta cărților pe care le publicați.</span>
+                  <span className="text-[9px] text-[#8A8178]/80 mt-1 block">{t('penNameHint')}</span>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Mini Biografie (Câteva cuvinte)</label>
+                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('miniBioLabel')}</label>
                   <textarea 
                     placeholder="Scriu basme pentru copii transpuse în epoci realiste."
                     value={authBio}
@@ -594,7 +592,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             )}
 
             <div>
-              <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Adresă de Email</label>
+              <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('emailAddressLabel')}</label>
               <input 
                 type="email" 
                 placeholder="nume@autor.ro"
@@ -605,7 +603,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             </div>
 
             <div>
-              <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Parolă / Cod PIN</label>
+              <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('passwordPinLabel')}</label>
               <input 
                 type="password" 
                 placeholder="••••••"
@@ -619,7 +617,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
               type="submit"
               className="w-full p-3.5 bg-[#5A5A40] hover:bg-[#484833] text-[#F5F2ED] text-xs font-mono font-bold rounded-xl shadow-sm transition"
             >
-              {isRegistering ? 'CREEAZĂ CONT ȘI EXPUNE OPERE' : 'INTRĂ ÎN CABINETUL DE CREAȚIE'}
+              {isRegistering ? t('createAccountBtn') : t('enterCabinetBtn')}
             </button>
           </form>
 
@@ -631,10 +629,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
               }}
               className="text-xs text-[#5A5A40] hover:underline font-mono"
             >
-              {isRegistering 
-                ? 'Ai deja cont creat? Intră aici' 
-                : 'Scriitor debutant? Creează un cont de autor nou acum'
-              }
+              {isRegistering ? t('alreadyHaveAccount') : t('newAuthorSignup')}
             </button>
           </div>
         </div>
@@ -651,10 +646,10 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             <div className="md:col-span-8 space-y-2">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
-                <span className="text-[10px] font-mono text-emerald-700 font-bold uppercase tracking-wider">Autor înregistrat local</span>
+                <span className="text-[10px] font-mono text-emerald-700 font-bold uppercase tracking-wider">{t('authorRegisteredLocal')}</span>
               </div>
               <h3 className="font-serif italic font-bold text-3xl text-[#2D2A26]">{currentUser.penName}</h3>
-              <p className="text-[11px] font-mono text-[#8A8178]">Profil legat de: {currentUser.name} | Înrolat pe: {currentUser.joinedDate}</p>
+              <p className="text-[11px] font-mono text-[#8A8178]">{t('profileLinkedTo')}: {currentUser.name} | {t('enrolledOn')}: {currentUser.joinedDate}</p>
               <p className="text-xs text-[#8A8178] leading-relaxed font-light font-serif italic max-w-xl">
                 „{currentUser.bio}”
               </p>
@@ -664,10 +659,10 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-[#FAF8F5] hover:bg-red-50 text-[#8A8178] hover:text-red-700 border border-[#E3DDD3] hover:border-red-100 rounded-xl text-xs font-mono transition flex items-center gap-2"
-                title="Deconectare profil"
+                title={t('logoutTitle')}
               >
                 <LogOut className="w-4 h-4" />
-                Deconectare
+                {t('logout')}
               </button>
             </div>
           </div>
@@ -677,16 +672,16 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             {/* Left box: Create Book draft form */}
             <div className="lg:col-span-5 bg-white border border-[#E3DDD3] rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-2 justify-between border-b border-[#E3DDD3]/80 pb-3">
-                <h4 className="font-serif italic font-bold text-lg text-[#2D2A26]">Creează o operă nouă</h4>
+                <h4 className="font-serif italic font-bold text-lg text-[#2D2A26]">{t('createNewWork')}</h4>
                 <Sparkles className="w-4 h-4 text-[#5A5A40]" />
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Titlul volumului</label>
+                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('volumeTitleLabel')}</label>
                   <input 
                     type="text" 
-                    placeholder="Zbor frânt spre înălțimi"
+                    placeholder={t('volumeTitlePlaceholder')}
                     value={newDraftTitle}
                     onChange={(e) => setNewDraftTitle(e.target.value)}
                     className="w-full text-xs p-3 border border-[#E3DDD3] bg-white rounded-xl focus:border-[#5A5A40] outline-none transition"
@@ -694,9 +689,9 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Scurtă descriere / Sinopsis</label>
+                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('synopsisLabel')}</label>
                   <textarea 
-                    placeholder="Un roman de dragoste transpus într-un vechi conac transilvănean uitat de timp..."
+                    placeholder={t('synopsisPlaceholder')}
                     value={newDraftDesc}
                     onChange={(e) => setNewDraftDesc(e.target.value)}
                     className="w-full text-xs p-3 h-20 border border-[#E3DDD3] bg-white rounded-xl focus:border-[#5A5A40] outline-none transition resize-none"
@@ -705,7 +700,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
 
                 {/* Cover Colors Customization */}
                 <div>
-                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-2">Selecție Piele Copertă (Culoare)</label>
+                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-2">{t('coverColorLabel')}</label>
                   <div className="grid grid-cols-6 gap-2">
                     {COVER_COLORS_PALETTE.map((palette) => (
                       <button
@@ -723,7 +718,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
 
                 {/* Cover Design select style */}
                 <div>
-                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Tipografie / Stil ornament copertă</label>
+                  <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('coverStyleLabel')}</label>
                   <div className="grid grid-cols-2 gap-2">
                     {['classic', 'minimalist', 'geometric', 'ornate'].map((design) => (
                       <button
@@ -749,7 +744,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                   }`}
                 >
                   <Plus className="w-4 h-4" />
-                  CREEAZĂ CIORNĂ CARTE (DRAFT)
+                  {t('createDraftBtn')}
                 </button>
               </div>
             </div>
@@ -757,7 +752,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             {/* Right box: Active drafts list */}
             <div className="lg:col-span-7 bg-white border border-[#E3DDD3] rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-2 justify-between border-b border-[#E3DDD3]/80 pb-3">
-                <h4 className="font-serif italic font-bold text-lg text-[#2D2A26]">Ciornele tale salavate în lucru</h4>
+                <h4 className="font-serif italic font-bold text-lg text-[#2D2A26]">{t('yourSavedDrafts')}</h4>
                 <span className="text-[10px] text-[#8A8178] font-mono uppercase font-bold bg-[#8A8178]/10 px-2.5 py-1 rounded-full border border-[#8A8178]/15">
                   Drafts: {drafts.filter(d => d.authorId === currentUser.id).length}
                 </span>
@@ -768,8 +763,8 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                   <div className="w-10 h-10 rounded-full border border-dashed border-[#D8D2C6] flex items-center justify-center text-[#8A8178] mx-auto">
                     <FileText className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-[#8A8178] font-mono">Nu aveți nicio ciornă de carte activă.</p>
-                  <p className="text-[11px] text-[#8A8178]/80 leading-relaxed font-light">Completați formularul din stânga pentru a deschide un spațiu de desen literar privat dedicat operei voastre.</p>
+                  <p className="text-xs text-[#8A8178] font-mono">{t('noActiveDrafts')}</p>
+                  <p className="text-[11px] text-[#8A8178]/80 leading-relaxed font-light">{t('noDraftsHint')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -795,17 +790,17 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                           <h5 className="font-serif font-bold text-sm text-[#2D2A26] line-clamp-1 group-hover:text-[#5A5A40] transition">
                             {draft.title}
                           </h5>
-                          <p className="text-[10px] text-[#8A8178] truncate">Nivel: {draft.chapters?.length || 0} capitole scrise</p>
-                          <p className="text-[9px] text-[#8A8178]/70 mt-1 font-mono">Ultima salvare: {draft.lastUpdated}</p>
+                          <p className="text-[10px] text-[#8A8178] truncate">{t('levelLabel')}: {draft.chapters?.length || 0} {t('chaptersWritten')}</p>
+                          <p className="text-[9px] text-[#8A8178]/70 mt-1 font-mono">{t('lastSaved')}: {draft.lastUpdated}</p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-[#5A5A40] opacity-0 group-hover:opacity-100 transition duration-200">scrie acum →</span>
+                        <span className="text-[10px] font-mono text-[#5A5A40] opacity-0 group-hover:opacity-100 transition duration-200">{t('writeNow')}</span>
                         <button
                           onClick={(e) => handleDeleteDraft(draft.id, e)}
                           className="p-2 border border-transparent hover:border-red-100 hover:bg-red-50 text-[#8A8178] hover:text-red-600 rounded-xl transition flexItems"
-                          title="Șterge ciornă"
+                          title={t('deleteDraftTitle')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -833,16 +828,16 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                 id="back-to-cabinet-btn"
                 onClick={() => setEditingDraft(null)}
                 className="p-2 bg-white border border-[#E3DDD3] hover:border-[#8A8178] hover:bg-[#FAF8F5] text-[#5A5A40] rounded-xl transition flex items-center justify-center"
-                title="Înapoi la Cabinetul de Creație"
+                title={t('backToCabinetTitle')}
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <div>
-                <span className="text-[10px] font-mono text-[#8A8178] uppercase">Se editează ciorna romanului</span>
+                <span className="text-[10px] font-mono text-[#8A8178] uppercase">{t('editingDraftLabel')}</span>
                 <h3 className="font-serif italic font-bold text-2xl text-[#2D2A26] flex items-center gap-2">
                   {editingDraft.title}
                   <span className="text-xs font-mono font-medium not-italic bg-[#5A5A40]/10 text-[#5A5A40] px-2 py-0.5 rounded border border-[#5A5A40]/15">
-                    de {editingDraft.penName}
+                    {t('authorPrefix')} {editingDraft.penName}
                   </span>
                 </h3>
               </div>
@@ -854,7 +849,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                 className="flex-1 sm:flex-none px-4 py-2.5 bg-[#FAF8F6] hover:bg-[#E3DDD3] text-[#2D2A26] border border-[#E3DDD3] font-mono text-xs rounded-xl transition flex items-center justify-center gap-1.5"
               >
                 <Save className="w-4 h-4" />
-                Salvează Ciornă
+                {t('saveDraftBtn')}
               </button>
 
               <button
@@ -862,7 +857,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                 className="flex-1 sm:flex-none px-5 py-2.5 bg-[#5A5A40] hover:bg-[#484833] text-white font-serif italic text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <Globe className="w-4 h-4" />
-                Publică pe Store
+                {t('publishToStore')}
               </button>
             </div>
           </div>
@@ -872,14 +867,14 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             {/* Chapters scroller column */}
             <div className="lg:col-span-3 bg-white border border-[#E3DDD3] rounded-2xl p-4 space-y-4">
               <div className="flex items-center justify-between border-b border-[#E3DDD3]/70 pb-3">
-                <span className="text-[10px] font-mono text-[#2D2A26] uppercase font-bold">Harta Capitolelor</span>
+                <span className="text-[10px] font-mono text-[#2D2A26] uppercase font-bold">{t('chapterMapLabel')}</span>
                 <button
                   onClick={handleAddNewChapterToDraft}
                   className="p-1 hover:bg-[#FAF8F5] text-[#5A5A40] border border-[#E3DDD3] rounded-md transition flex items-center justify-center gap-0.5 text-[10px] font-mono font-bold"
-                  title="Apasă pentru capitol de carte nou"
+                  title={t('addChapterBtn')}
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Adaugă
+                  {t('addChapterBtn')}
                 </button>
               </div>
 
@@ -915,8 +910,8 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                       }`}
                     >
                       <div className="min-w-0 pr-2">
-                        <p className="text-[9px] font-mono uppercase text-[#8A8178] group-hover:text-black">Secțiunea {idx + 1}</p>
-                        <p className="text-xs truncate font-serif italic">{ch.title || 'Capitol fără titlu'}</p>
+                        <p className="text-[9px] font-mono uppercase text-[#8A8178] group-hover:text-black">{t('sectionN')} {idx + 1}</p>
+                        <p className="text-xs truncate font-serif italic">{ch.title || t('untitledChapter')}</p>
                       </div>
 
                       <button
@@ -925,7 +920,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                           handleDeleteChapter(idx);
                         }}
                         className="p-1 rounded text-[#8A8178]/50 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition"
-                        title="Șterge secțiune"
+                        title={t('deleteSectionTitle')}
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -943,12 +938,12 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                 {/* Chapter metadata title edit */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">Titlul Capitolului Curent</label>
+                    <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">{t('currentChapterTitleLabel')}</label>
                     <input
                       type="text"
                       value={chapterTitleInput}
                       onChange={(e) => setChapterTitleInput(e.target.value)}
-                      placeholder="Capitolul I: Rătăcirea"
+                      placeholder={t('chapterTitlePlaceholder')}
                       className="w-full text-xs font-bold font-serif italic p-3 border border-[#E3DDD3] bg-white rounded-xl focus:border-[#5A5A40] outline-none transition"
                     />
                   </div>
@@ -956,7 +951,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                   {/* Direct File TXT/PDF Injector section */}
                   <div>
                     <label className="block text-[10px] font-mono text-[#8A8178] uppercase mb-1">
-                      Sau încarcă direct capitol (PDF sau TXT)
+                      {t('orUploadChapter')}
                     </label>
                     <div className="relative">
                       <input
@@ -976,12 +971,12 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                         {isImportingToChapter ? (
                           <>
                             <div className="w-3.5 h-3.5 border-2 border-[#5A5A40] border-t-transparent rounded-full animate-spin" />
-                            Se analizează textul...
+                            {t('analyzingText')}
                           </>
                         ) : (
                           <>
                             <FileUp className="w-4 h-4" />
-                            Alege fișier (.pdf / .txt)
+                            {t('chooseFilePdfTxt')}
                           </>
                         )}
                       </label>
@@ -995,25 +990,25 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                 {/* Prose Textarea editor */}
                 <div>
                   <div className="flex justify-between items-center mb-1 bg-[#FAF8F5] p-2 border border-[#E3DDD3] rounded-t-xl text-[10px] text-[#8A8178] font-mono">
-                    <span>CONȚINUT PROZĂ (HTML sau text simplu formatat cu paragrafe)</span>
+                    <span>{t('proseContentLabel')}</span>
                     <span className="flex items-center gap-1">
                       <Info className="w-3 h-3 text-[#5A5A40]" />
-                      Folosiți paragrafe simple sau editorul liber
+                      {t('useSimpleParagraphs')}
                     </span>
                   </div>
                   <textarea
                     value={chapterContentInput}
                     onChange={(e) => setChapterContentInput(e.target.value)}
-                    placeholder="Scrieți textul romanului aici..."
+                    placeholder={t('writeNovelHere')}
                     className="w-full text-sm font-serif p-5 h-[320px] border-x border-b border-[#E3DDD3] bg-[#FAF8F5]/30 rounded-b-xl focus:bg-white focus:border-[#5A5A40] outline-none transition font-light leading-relaxed resize-none"
                   />
                 </div>
 
                 <div className="flex justify-between items-center text-[10.5px] font-mono text-[#8A8178] pt-2">
-                  <p>Număr caractere: {chapterContentInput.length} | Cuvinte estimate: {chapterContentInput.split(/\s+/).filter(Boolean).length}</p>
+                  <p>{t('charCount')}: {chapterContentInput.length} | {t('estimatedWords')}: {chapterContentInput.split(/\s+/).filter(Boolean).length}</p>
                   <p className="flex items-center gap-1 select-none">
                     <span className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
-                    Baza de date salvează automat ciornele local
+                    {t('autoSaveLocal')}
                   </p>
                 </div>
 
@@ -1023,8 +1018,8 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
               <div className="p-4 bg-[#FAF8F5] border border-[#E3DDD3] rounded-2xl flex gap-3 text-xs text-[#8A8178] leading-relaxed font-light">
                 <Info className="w-5 h-5 text-[#5A5A40] flex-shrink-0 mt-0.5 animate-bounce" />
                 <div className="space-y-1">
-                  <p className="font-semibold text-[#2D2A26]">Sfatul Corectorului Lectura Realistă:</p>
-                  <p>Pentru a avea o citire de elită pe ecranul 3D cu orientare pliabilă, încercați să asigurați rânduri lungi și structurate în paragrafe de povestire curate. Puteți scrie text pur (simplu), aplicația îl va compila automat cu identare stilizată regală o dată publicat.</p>
+                  <p className="font-semibold text-[#2D2A26]">{t('editorTipTitle')}</p>
+                  <p>{t('editorTipText')}</p>
                 </div>
               </div>
 
@@ -1046,13 +1041,13 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
             <div className="md:col-span-8 space-y-3">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-600/10 text-amber-800 font-mono text-[9px] uppercase font-bold rounded-full border border-amber-600/15">
                 <Globe className="w-3.5 h-3.5 text-amber-700" />
-                Librăria Publică a Comunității
+                {t('communityStoreBadge')}
               </span>
               <h3 className="font-serif italic font-bold text-2xl md:text-3xl text--[#2D2A26] leading-tight">
-                Descoperă manuscrise inedite publicate de autori reali
+                {t('storeDiscoverTitle')}
               </h3>
               <p className="text-xs text-[#8A8178] font-light leading-relaxed max-w-2xl">
-                Bine ați venit pe piața liberă de povești! Aici puteți explora titlurile publicate de scriitori ce utilizează platforma. Dacă găsiți o operă fascinantă, apăsați pe <b>„Descarcă pe Raft”</b> pentru a o instala instant în propria bibliotecă, gata de răsfoit în 3D.
+                {t('storeDiscoverDesc')}
               </p>
             </div>
 
@@ -1061,7 +1056,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                 <Search className="w-4 h-4 text-[#8A8178] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input 
                   type="text" 
-                  placeholder="Caută titlu, autor..."
+                  placeholder={t('storeSearchPlaceholder')}
                   value={storeSearch}
                   onChange={(e) => setStoreSearch(e.target.value)}
                   className="w-full text-xs pl-10 pr-4 py-3 bg-white border border-[#E3DDD3] rounded-full focus:border-[#5A5A40] outline-none transition"
@@ -1076,8 +1071,8 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
               <div className="w-10 h-10 rounded-full border border-[#D8D2C6] flex items-center justify-center text-[#8A8178] mx-auto bg-white">
                 <Search className="w-5 h-5" />
               </div>
-              <p className="text-xs text-[#2D2A26] font-bold">Nicio carte nu se asortează căutării</p>
-              <p className="text-[11px] text-[#8A8178] font-light leading-relaxed">Încearcați să căutați cuvinte generice sau vizitați Cabinetul de Autor pentru a deveni chiar dumneavoastră primul scriitor care publică aici.</p>
+              <p className="text-xs text-[#2D2A26] font-bold">{t('noSearchResults')}</p>
+              <p className="text-[11px] text-[#8A8178] font-light leading-relaxed">{t('noSearchResultsHint')}</p>
             </div>
           ) : (
             <div id="store-bookshelf-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -1098,7 +1093,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                         className="w-24 h-32 rounded-lg py-3 px-2 text-white flex flex-col justify-between shadow-md relative overflow-hidden mx-auto transition-transform duration-300 group-hover:scale-105 border border-black/10 select-none cursor-pointer"
                         style={{ backgroundColor: book.coverColor }}
                         onClick={(e) => handleDownloadStoreBookToShelf(book, e)}
-                        title="Descarcă această operă pe raft"
+                        title={t('downloadThisBook')}
                       >
                         {/* Dynamic decorative layouts */}
                         {book.coverDesign === 'ornate' && (
@@ -1122,11 +1117,11 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
 
                       <div className="text-center space-y-1">
                         <h4 className="font-serif font-bold text-sm text-[#2D2A26] line-clamp-1">{book.title}</h4>
-                        <p className="text-[10px] text-[#8A8178] font-mono uppercase">de {book.author}</p>
+                        <p className="text-[10px] text-[#8A8178] font-mono uppercase">{t('authorPrefix')} {book.author}</p>
                       </div>
 
                       <p className="text-[11px] text-[#8A8178] leading-relaxed font-light text-center line-clamp-3 min-h-[50px] bg-[#FAF8F5]/40 p-2.5 rounded-xl border border-[#FAF8F5]">
-                        {book.description || 'Nicio descriere definită de autor în cabinet.'}
+                        {book.description || t('noDescriptionByAuthor')}
                       </p>
                     </div>
 
@@ -1136,11 +1131,11 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                       <div className="flex items-center justify-between text-[10px] font-mono text-[#8A8178]">
                         <span className="flex items-center gap-1">
                           <Download className="w-3.5 h-3.5 text-[#5A5A40]" />
-                          <b>{book.downloadsCount || 0}</b> descărcări
+                          <b>{book.downloadsCount || 0}</b> {t('downloadsLabel')}
                         </span>
                         <span className="flex items-center gap-1">
                           <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-                          <b>{book.likesCount || 0}</b> aprecieri
+                          <b>{book.likesCount || 0}</b> {t('likesLabel')}
                         </span>
                       </div>
 
@@ -1153,7 +1148,7 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                               ? 'bg-red-50 border-red-200 text-red-600' 
                               : 'bg-white border-[#E3DDD3] hover:border-red-200 text-[#8A8178] hover:text-red-600 hover:bg-red-50/20'
                           }`}
-                          title="Apreciază cartea"
+                          title={t('likeBookTitle')}
                         >
                           <Heart className={`w-4 h-4 ${alreadyLiked ? 'fill-red-600' : ''}`} />
                         </button>
@@ -1163,13 +1158,13 @@ export function AuthorStoreSuite({ currentTab, onBookImported, onNavigateToLibra
                           className="flex-1 py-2 bg-[#5A5A40] hover:bg-[#484833] active:scale-98 text-white text-[11px] font-mono font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
                         >
                           <Download className="w-3.5 h-3.5" />
-                          DESCARCĂ PE RAFT
+                          {t('downloadToShelf')}
                         </button>
                       </div>
 
                       <div className="text-center">
                         <span className="text-[8px] font-mono text-[#8A8178]/60 uppercase tracking-widest">
-                          Publicat: {book.datePublished}
+                          {t('publishedOn')}: {book.datePublished}
                         </span>
                       </div>
 

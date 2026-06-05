@@ -124,7 +124,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
                 onDelete(book.id);
               }}
               className="p-1.5 text-[#8A8178] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all duration-200"
-              title="Șterge cartea"
+              title={t('deleteBookTitle')}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -132,7 +132,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
         </div>
 
         <p className="text-[11px] text-[#8A8178] line-clamp-2 mt-1 leading-relaxed min-h-[32px] hidden sm:block">
-          {book.description || 'Fără descriere disponibilă.'}
+          {book.description || t('noDescription')}
         </p>
 
         {/* Bottom progress metric bar */}
@@ -146,7 +146,7 @@ export const LibraryBookCard: React.FC<LibraryBookCardProps> = ({ book, onRead, 
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#5A5A40]/10 text-[#5A5A40] rounded font-bold">
               <Milestone className="w-3 h-3" />
               <span>
-                Cap. {book.progress.chapterIndex + 1}, Pag. {book.progress.pageIndex + 1}
+                {t('chapterShort')} {book.progress.chapterIndex + 1}, {t('pageShortDot')} {book.progress.pageIndex + 1}
               </span>
             </div>
           ) : (
