@@ -600,7 +600,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ book, onClose, onProgres
   return (
     <div
       id="reader-workspace"
-      className="fixed inset-0 z-40 bg-[#4A443F] flex flex-col overflow-hidden select-none animate-reader-open"
+      className="fixed inset-0 z-[9000] bg-[#4A443F] flex flex-col overflow-hidden select-none animate-reader-open"
     >
       {/* Tabletop background wood layout */}
       <div className="absolute inset-0 bg-wood-texture opacity-30 select-none pointer-events-none" />
